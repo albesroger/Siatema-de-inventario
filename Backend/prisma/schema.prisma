@@ -1,0 +1,446 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ajuste_inventario {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocio_id     String           @db.Uuid
+  usuario_id     String           @db.Uuid
+  dispositivo_id String           @db.Uuid
+  numero         BigInt
+  tipo           tipo_ajuste
+  motivo         motivo_ajuste
+  observaciones  String?
+  estado         estado_documento @default(COMPLETADA)
+  created_at     DateTime         @default(now()) @db.Timestamp(6)
+  updated_at     DateTime         @default(now()) @db.Timestamp(6)
+  dispositivo    dispositivo      @relation(fields: [dispositivo_id], references: [id], onUpdate: NoAction, map: "fk_ajuste_dispositivo")
+  negocio        negocio          @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_ajuste_negocio")
+  usuario        usuario          @relation(fields: [usuario_id], references: [id], onUpdate: NoAction, map: "fk_ajuste_usuario")
+  detalle_ajuste detalle_ajuste[]
+
+  @@unique([negocio_id, numero], map: "uq_ajuste_negocio_numero")
+  @@index([created_at], map: "idx_ajuste_fecha")
+  @@index([negocio_id], map: "idx_ajuste_negocio")
+}
+
+model categoria {
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocio_id  String         @db.Uuid
+  nombre      String         @db.VarChar(100)
+  descripcion String?
+  estado      estado_general @default(ACTIVO)
+  created_at  DateTime       @default(now()) @db.Timestamp(6)
+  updated_at  DateTime       @default(now()) @db.Timestamp(6)
+  negocio     negocio        @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_categoria_negocio")
+  producto    producto[]
+
+  @@unique([negocio_id, nombre], map: "uq_categoria_negocio_nombre")
+  @@index([negocio_id], map: "idx_categoria_negocio")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model detalle_ajuste {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ajuste_id         String            @db.Uuid
+  producto_id       String            @db.Uuid
+  cantidad          Decimal           @db.Decimal(14, 3)
+  stock_anterior    Decimal           @db.Decimal(14, 3)
+  stock_nuevo       Decimal           @db.Decimal(14, 3)
+  observaciones     String?
+  created_at        DateTime          @default(now()) @db.Timestamp(6)
+  ajuste_inventario ajuste_inventario @relation(fields: [ajuste_id], references: [id], onUpdate: NoAction, map: "fk_detalle_ajuste_ajuste")
+  producto          producto          @relation(fields: [producto_id], references: [id], onUpdate: NoAction, map: "fk_detalle_ajuste_producto")
+
+  @@index([ajuste_id], map: "idx_detalle_ajuste_ajuste")
+  @@index([producto_id], map: "idx_detalle_ajuste_producto")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model detalle_entrada {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entrada_id         String             @db.Uuid
+  producto_id        String             @db.Uuid
+  cantidad           Decimal            @db.Decimal(14, 3)
+  costo_unitario     Decimal            @db.Decimal(14, 2)
+  descuento          Decimal            @default(0) @db.Decimal(14, 2)
+  subtotal           Decimal            @db.Decimal(14, 2)
+  created_at         DateTime           @default(now()) @db.Timestamp(6)
+  entrada_inventario entrada_inventario @relation(fields: [entrada_id], references: [id], onUpdate: NoAction, map: "fk_detalle_entrada_entrada")
+  producto           producto           @relation(fields: [producto_id], references: [id], onUpdate: NoAction, map: "fk_detalle_entrada_producto")
+
+  @@index([entrada_id], map: "idx_detalle_entrada_entrada")
+  @@index([producto_id], map: "idx_detalle_entrada_producto")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model detalle_salida {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  salida_id         String            @db.Uuid
+  producto_id       String            @db.Uuid
+  cantidad          Decimal           @db.Decimal(14, 3)
+  observaciones     String?
+  created_at        DateTime          @default(now()) @db.Timestamp(6)
+  producto          producto          @relation(fields: [producto_id], references: [id], onUpdate: NoAction, map: "fk_detalle_salida_producto")
+  salida_inventario salida_inventario @relation(fields: [salida_id], references: [id], onUpdate: NoAction, map: "fk_detalle_salida_salida")
+
+  @@index([producto_id], map: "idx_detalle_salida_producto")
+  @@index([salida_id], map: "idx_detalle_salida_salida")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model detalle_venta {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  venta_id        String   @db.Uuid
+  producto_id     String   @db.Uuid
+  cantidad        Decimal  @db.Decimal(14, 3)
+  precio_unitario Decimal  @db.Decimal(14, 2)
+  descuento       Decimal  @default(0) @db.Decimal(14, 2)
+  subtotal        Decimal  @db.Decimal(14, 2)
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  producto        producto @relation(fields: [producto_id], references: [id], onUpdate: NoAction, map: "fk_detalle_venta_producto")
+  venta           venta    @relation(fields: [venta_id], references: [id], onUpdate: NoAction, map: "fk_detalle_venta_venta")
+
+  @@index([producto_id], map: "idx_detalle_venta_producto")
+  @@index([venta_id], map: "idx_detalle_venta_venta")
+}
+
+model dispositivo {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocio_id               String                     @db.Uuid
+  nombre                   String                     @db.VarChar(100)
+  identificador            String                     @unique(map: "uq_dispositivo_identificador") @db.VarChar(255)
+  tipo                     tipo_dispositivo
+  estado                   estado_dispositivo         @default(ACTIVO)
+  ultima_sincronizacion_at DateTime?                  @db.Timestamp(6)
+  created_at               DateTime                   @default(now()) @db.Timestamp(6)
+  updated_at               DateTime                   @default(now()) @db.Timestamp(6)
+  ajuste_inventario        ajuste_inventario[]
+  negocio                  negocio                    @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_dispositivo_negocio")
+  entrada_inventario       entrada_inventario[]
+  movimiento_inventario    movimiento_inventario[]
+  operacion_sincronizacion operacion_sincronizacion[]
+  salida_inventario        salida_inventario[]
+  venta                    venta[]
+
+  @@index([negocio_id], map: "idx_dispositivo_negocio")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model entrada_inventario {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocio_id       String            @db.Uuid
+  proveedor_id     String?           @db.Uuid
+  usuario_id       String            @db.Uuid
+  dispositivo_id   String            @db.Uuid
+  numero           BigInt
+  numero_documento String?           @db.VarChar(100)
+  subtotal         Decimal           @default(0) @db.Decimal(14, 2)
+  descuento        Decimal           @default(0) @db.Decimal(14, 2)
+  total            Decimal           @default(0) @db.Decimal(14, 2)
+  observaciones    String?
+  estado           estado_documento  @default(COMPLETADA)
+  created_at       DateTime          @default(now()) @db.Timestamp(6)
+  updated_at       DateTime          @default(now()) @db.Timestamp(6)
+  detalle_entrada  detalle_entrada[]
+  dispositivo      dispositivo       @relation(fields: [dispositivo_id], references: [id], onUpdate: NoAction, map: "fk_entrada_dispositivo")
+  negocio          negocio           @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_entrada_negocio")
+  proveedor        proveedor?        @relation(fields: [proveedor_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_entrada_proveedor")
+  usuario          usuario           @relation(fields: [usuario_id], references: [id], onUpdate: NoAction, map: "fk_entrada_usuario")
+
+  @@unique([negocio_id, numero], map: "uq_entrada_negocio_numero")
+  @@index([created_at], map: "idx_entrada_fecha")
+  @@index([negocio_id], map: "idx_entrada_negocio")
+  @@index([proveedor_id], map: "idx_entrada_proveedor")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model movimiento_inventario {
+  id              String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocio_id      String                     @db.Uuid
+  producto_id     String                     @db.Uuid
+  usuario_id      String                     @db.Uuid
+  dispositivo_id  String                     @db.Uuid
+  tipo            tipo_movimiento
+  cantidad        Decimal                    @db.Decimal(14, 3)
+  stock_anterior  Decimal                    @db.Decimal(14, 3)
+  stock_posterior Decimal                    @db.Decimal(14, 3)
+  referencia_tipo tipo_referencia_movimiento
+  referencia_id   String                     @db.Uuid
+  motivo          String?                    @db.VarChar(255)
+  created_at      DateTime                   @default(now()) @db.Timestamp(6)
+  dispositivo     dispositivo                @relation(fields: [dispositivo_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_dispositivo")
+  negocio         negocio                    @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_negocio")
+  producto        producto                   @relation(fields: [producto_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_producto")
+  usuario         usuario                    @relation(fields: [usuario_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_usuario")
+
+  @@index([created_at], map: "idx_movimiento_fecha")
+  @@index([negocio_id], map: "idx_movimiento_negocio")
+  @@index([producto_id], map: "idx_movimiento_producto")
+  @@index([referencia_tipo, referencia_id], map: "idx_movimiento_referencia")
+}
+
+model negocio {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre                   String                     @db.VarChar(150)
+  nombre_comercial         String?                    @db.VarChar(150)
+  direccion                String?                    @db.VarChar(255)
+  telefono                 String?                    @db.VarChar(50)
+  moneda                   String                     @default("CUP") @db.VarChar(10)
+  estado                   estado_general             @default(ACTIVO)
+  created_at               DateTime                   @default(now()) @db.Timestamp(6)
+  updated_at               DateTime                   @default(now()) @db.Timestamp(6)
+  ajuste_inventario        ajuste_inventario[]
+  categoria                categoria[]
+  dispositivo              dispositivo[]
+  entrada_inventario       entrada_inventario[]
+  movimiento_inventario    movimiento_inventario[]
+  operacion_sincronizacion operacion_sincronizacion[]
+  producto                 producto[]
+  proveedor                proveedor[]
+  salida_inventario        salida_inventario[]
+  usuario                  usuario[]
+  venta                    venta[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model operacion_sincronizacion {
+  id                String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocio_id        String                @db.Uuid
+  dispositivo_id    String                @db.Uuid
+  secuencia_local   BigInt
+  tipo              String                @db.VarChar(30)
+  referencia_id     String                @db.Uuid
+  estado            estado_sincronizacion @default(PENDIENTE)
+  payload           Json
+  version           Int                   @default(1)
+  intentos          Int                   @default(0)
+  ultimo_intento_at DateTime?             @db.Timestamp(6)
+  sincronizado_at   DateTime?             @db.Timestamp(6)
+  error_codigo      String?               @db.VarChar(100)
+  error_mensaje     String?
+  created_at        DateTime              @default(now()) @db.Timestamp(6)
+  updated_at        DateTime              @default(now()) @db.Timestamp(6)
+  dispositivo       dispositivo           @relation(fields: [dispositivo_id], references: [id], onUpdate: NoAction, map: "fk_sync_dispositivo")
+  negocio           negocio               @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_sync_negocio")
+
+  @@unique([dispositivo_id, secuencia_local], map: "uq_sync_dispositivo_secuencia")
+  @@index([dispositivo_id, estado], map: "idx_sync_dispositivo_estado")
+  @@index([negocio_id, estado], map: "idx_sync_negocio_estado")
+  @@index([referencia_id], map: "idx_sync_referencia")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model producto {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocio_id            String                  @db.Uuid
+  categoria_id          String                  @db.Uuid
+  codigo                String                  @db.VarChar(100)
+  codigo_barras         String?                 @db.VarChar(100)
+  nombre                String                  @db.VarChar(150)
+  descripcion           String?
+  unidad_medida         unidad_medida           @default(UNIDAD)
+  precio_compra         Decimal                 @default(0) @db.Decimal(14, 2)
+  precio_venta          Decimal                 @default(0) @db.Decimal(14, 2)
+  stock_actual          Decimal                 @default(0) @db.Decimal(14, 3)
+  stock_minimo          Decimal                 @default(0) @db.Decimal(14, 3)
+  stock_maximo          Decimal?                @db.Decimal(14, 3)
+  estado                estado_general          @default(ACTIVO)
+  created_at            DateTime                @default(now()) @db.Timestamp(6)
+  updated_at            DateTime                @default(now()) @db.Timestamp(6)
+  detalle_ajuste        detalle_ajuste[]
+  detalle_entrada       detalle_entrada[]
+  detalle_salida        detalle_salida[]
+  detalle_venta         detalle_venta[]
+  movimiento_inventario movimiento_inventario[]
+  categoria             categoria               @relation(fields: [categoria_id], references: [id], onUpdate: NoAction, map: "fk_producto_categoria")
+  negocio               negocio                 @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_producto_negocio")
+
+  @@unique([negocio_id, codigo], map: "uq_producto_negocio_codigo")
+  @@index([categoria_id], map: "idx_producto_categoria")
+  @@index([codigo_barras], map: "idx_producto_codigo_barras")
+  @@index([negocio_id], map: "idx_producto_negocio")
+}
+
+model proveedor {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocio_id         String               @db.Uuid
+  nombre             String               @db.VarChar(150)
+  telefono           String?              @db.VarChar(50)
+  direccion          String?              @db.VarChar(255)
+  email              String?              @db.VarChar(150)
+  identificacion     String?              @db.VarChar(100)
+  observaciones      String?
+  estado             estado_general       @default(ACTIVO)
+  created_at         DateTime             @default(now()) @db.Timestamp(6)
+  updated_at         DateTime             @default(now()) @db.Timestamp(6)
+  entrada_inventario entrada_inventario[]
+  negocio            negocio              @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_proveedor_negocio")
+
+  @@index([negocio_id], map: "idx_proveedor_negocio")
+}
+
+model salida_inventario {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocio_id     String           @db.Uuid
+  usuario_id     String           @db.Uuid
+  dispositivo_id String           @db.Uuid
+  numero         BigInt
+  motivo         motivo_salida
+  observaciones  String?
+  estado         estado_documento @default(COMPLETADA)
+  created_at     DateTime         @default(now()) @db.Timestamp(6)
+  updated_at     DateTime         @default(now()) @db.Timestamp(6)
+  detalle_salida detalle_salida[]
+  dispositivo    dispositivo      @relation(fields: [dispositivo_id], references: [id], onUpdate: NoAction, map: "fk_salida_dispositivo")
+  negocio        negocio          @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_salida_negocio")
+  usuario        usuario          @relation(fields: [usuario_id], references: [id], onUpdate: NoAction, map: "fk_salida_usuario")
+
+  @@unique([negocio_id, numero], map: "uq_salida_negocio_numero")
+  @@index([created_at], map: "idx_salida_fecha")
+  @@index([negocio_id], map: "idx_salida_negocio")
+}
+
+model usuario {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocio_id            String                  @db.Uuid
+  nombre                String                  @db.VarChar(150)
+  username              String                  @db.VarChar(100)
+  password_hash         String                  @db.VarChar(255)
+  rol                   rol_usuario             @default(ADMINISTRADOR)
+  estado                estado_general          @default(ACTIVO)
+  ultimo_acceso_at      DateTime?               @db.Timestamp(6)
+  created_at            DateTime                @default(now()) @db.Timestamp(6)
+  updated_at            DateTime                @default(now()) @db.Timestamp(6)
+  ajuste_inventario     ajuste_inventario[]
+  entrada_inventario    entrada_inventario[]
+  movimiento_inventario movimiento_inventario[]
+  salida_inventario     salida_inventario[]
+  negocio               negocio                 @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_usuario_negocio")
+  venta                 venta[]
+
+  @@unique([negocio_id, username], map: "uq_usuario_negocio_username")
+  @@index([negocio_id], map: "idx_usuario_negocio")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model venta {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocio_id     String           @db.Uuid
+  usuario_id     String           @db.Uuid
+  dispositivo_id String           @db.Uuid
+  numero         BigInt
+  subtotal       Decimal          @default(0) @db.Decimal(14, 2)
+  descuento      Decimal          @default(0) @db.Decimal(14, 2)
+  impuesto       Decimal          @default(0) @db.Decimal(14, 2)
+  total          Decimal          @default(0) @db.Decimal(14, 2)
+  metodo_pago    metodo_pago      @default(EFECTIVO)
+  estado         estado_documento @default(COMPLETADA)
+  created_at     DateTime         @default(now()) @db.Timestamp(6)
+  updated_at     DateTime         @default(now()) @db.Timestamp(6)
+  detalle_venta  detalle_venta[]
+  dispositivo    dispositivo      @relation(fields: [dispositivo_id], references: [id], onUpdate: NoAction, map: "fk_venta_dispositivo")
+  negocio        negocio          @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_venta_negocio")
+  usuario        usuario          @relation(fields: [usuario_id], references: [id], onUpdate: NoAction, map: "fk_venta_usuario")
+
+  @@unique([negocio_id, numero], map: "uq_venta_negocio_numero")
+  @@index([created_at], map: "idx_venta_fecha")
+  @@index([negocio_id], map: "idx_venta_negocio")
+  @@index([usuario_id], map: "idx_venta_usuario")
+}
+
+enum estado_dispositivo {
+  ACTIVO
+  BLOQUEADO
+}
+
+enum estado_documento {
+  COMPLETADA
+  ANULADA
+}
+
+enum estado_general {
+  ACTIVO
+  INACTIVO
+}
+
+enum estado_sincronizacion {
+  PENDIENTE
+  SINCRONIZANDO
+  SINCRONIZADA
+  ERROR
+}
+
+enum metodo_pago {
+  EFECTIVO
+  TRANSFERENCIA
+  TARJETA
+  OTRO
+}
+
+enum motivo_ajuste {
+  DIFERENCIA_CONTEO
+  ERROR_REGISTRO
+  CORRECCION
+  OTRO
+}
+
+enum motivo_salida {
+  PRODUCTO_DANADO
+  PRODUCTO_VENCIDO
+  CONSUMO_INTERNO
+  PERDIDA
+  ROBO
+  MUESTRA
+  OTRO
+}
+
+enum rol_usuario {
+  ADMINISTRADOR
+}
+
+enum tipo_ajuste {
+  POSITIVO
+  NEGATIVO
+}
+
+enum tipo_dispositivo {
+  DESKTOP
+  LAPTOP
+  TABLET
+}
+
+enum tipo_movimiento {
+  INVENTARIO_INICIAL
+  ENTRADA
+  VENTA
+  SALIDA
+  AJUSTE_POSITIVO
+  AJUSTE_NEGATIVO
+}
+
+enum tipo_referencia_movimiento {
+  VENTA
+  ENTRADA
+  SALIDA
+  AJUSTE
+}
+
+enum unidad_medida {
+  UNIDAD
+  KILOGRAMO
+  GRAMO
+  LIBRA
+  LITRO
+  MILILITRO
+  METRO
+  CENTIMETRO
+  CAJA
+  PAQUETE
+  DOCENA
+}
