@@ -1,21 +1,21 @@
 import { Router } from "express";
 
-import { ProductoController } from "../controllers/producto.controller.js";
+import { ProveedorController } from "../controllers/proveedor.controller.js";
 
 import {
-  crearProductoSchema,
-  actualizarProductoSchema,
-} from "../schemas/producto.schema.js";
+  crearProveedorSchema,
+  actualizarProveedorSchema,
+} from "../schemas/proveedor.schema.js";
 
 import { validate } from "../middlewares/validate.js";
 
 const router = Router();
 
-const controller = new ProductoController();
+const controller = new ProveedorController();
 
 router.post(
   "/",
-  validate(crearProductoSchema),
+  validate(crearProveedorSchema),
   controller.crear.bind(controller),
 );
 
@@ -25,7 +25,7 @@ router.get("/:id", controller.obtenerPorId.bind(controller));
 
 router.put(
   "/:id",
-  validate(actualizarProductoSchema),
+  validate(actualizarProveedorSchema),
   controller.actualizar.bind(controller),
 );
 

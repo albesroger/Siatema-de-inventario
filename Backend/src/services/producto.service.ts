@@ -17,9 +17,30 @@ interface CrearProductoDTO {
 
 export class ProductoService {
   async crear(data: CrearProductoDTO) {
+    const negocio = await prisma.negocio.findUnique({
+      where: {
+        id: data.negocioId,
+      },
+    });
+
+    if (!negocio) {
+      throw new Error("El negocio no existe");
+    }
+
+    const categoria = await prisma.categoria.findFirst({
+      where: {
+        id: data.categoriaId,
+        negocioId: data.negocioId,
+      },
+    });
+
+    if (!categoria) {
+      throw new Error("La categoría no existe o no pertenece al negocio");
+    }
+
     const productoExistente = await prisma.producto.findFirst({
       where: {
-        negocio_id: data.negocioId,
+        negocioId: data.negocioId,
         codigo: data.codigo,
       },
     });
@@ -30,18 +51,18 @@ export class ProductoService {
 
     return prisma.producto.create({
       data: {
-        negocio_id: data.negocioId,
-        categoria_id: data.categoriaId,
+        negocioId: data.negocioId,
+        categoriaId: data.categoriaId,
         codigo: data.codigo,
-        codigo_barras: data.codigoBarras,
+        codigoBarras: data.codigoBarras,
         nombre: data.nombre,
         descripcion: data.descripcion,
-        unidad_medida: data.unidadMedida,
-        precio_compra: data.precioCompra,
-        precio_venta: data.precioVenta,
-        stock_actual: 0,
-        stock_minimo: data.stockMinimo ?? 0,
-        stock_maximo: data.stockMaximo,
+        unidadMedida: data.unidadMedida,
+        precioCompra: data.precioCompra,
+        precioVenta: data.precioVenta,
+        stockActual: 0,
+        stockMinimo: data.stockMinimo ?? 0,
+        stockMaximo: data.stockMaximo,
       },
     });
   }
@@ -49,7 +70,7 @@ export class ProductoService {
   async obtenerTodos(negocioId: string) {
     return prisma.producto.findMany({
       where: {
-        negocio_id: negocioId,
+        negocioId: negocioId,
       },
       include: {
         categoria: true,
@@ -64,7 +85,7 @@ export class ProductoService {
     return prisma.producto.findFirst({
       where: {
         id,
-        negocio_id: negocioId,
+        negocioId: negocioId,
       },
       include: {
         categoria: true,
@@ -80,7 +101,7 @@ export class ProductoService {
     const producto = await prisma.producto.findFirst({
       where: {
         id,
-        negocio_id: negocioId,
+        negocioId: negocioId,
       },
     });
 
@@ -93,16 +114,16 @@ export class ProductoService {
         id,
       },
       data: {
-        categoria_id: data.categoriaId,
+        categoriaId: data.categoriaId,
         codigo: data.codigo,
-        codigo_barras: data.codigoBarras,
+        codigoBarras: data.codigoBarras,
         nombre: data.nombre,
         descripcion: data.descripcion,
-        unidad_medida: data.unidadMedida,
-        precio_compra: data.precioCompra,
-        precio_venta: data.precioVenta,
-        stock_minimo: data.stockMinimo,
-        stock_maximo: data.stockMaximo,
+        unidadMedida: data.unidadMedida,
+        precioCompra: data.precioCompra,
+        precioVenta: data.precioVenta,
+        stockMinimo: data.stockMinimo,
+        stockMaximo: data.stockMaximo,
       },
     });
   }
@@ -111,7 +132,7 @@ export class ProductoService {
     const producto = await prisma.producto.findFirst({
       where: {
         id,
-        negocio_id: negocioId,
+        negocioId: negocioId,
       },
     });
 
