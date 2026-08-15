@@ -9,25 +9,28 @@ datasource db {
 }
 
 model ajuste_inventario {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  negocio_id     String           @db.Uuid
-  usuario_id     String           @db.Uuid
-  dispositivo_id String           @db.Uuid
-  numero         BigInt
-  tipo           tipo_ajuste
-  motivo         motivo_ajuste
-  observaciones  String?
-  estado         estado_documento @default(COMPLETADA)
-  created_at     DateTime         @default(now()) @db.Timestamp(6)
-  updated_at     DateTime         @default(now()) @db.Timestamp(6)
-  dispositivo    dispositivo      @relation(fields: [dispositivo_id], references: [id], onUpdate: NoAction, map: "fk_ajuste_dispositivo")
-  negocio        negocio          @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_ajuste_negocio")
-  usuario        usuario          @relation(fields: [usuario_id], references: [id], onUpdate: NoAction, map: "fk_ajuste_usuario")
-  detalle_ajuste detalle_ajuste[]
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocioId     String           @map("negocio_id") @db.Uuid
+  usuarioId     String           @map("usuario_id") @db.Uuid
+  dispositivoId String           @map("dispositivo_id") @db.Uuid
+  numero        BigInt
+  tipo          tipo_ajuste
+  motivo        motivo_ajuste
+  observaciones String?
+  estado        estado_documento @default(COMPLETADA)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime         @default(now()) @map("updated_at") @db.Timestamp(6)
 
-  @@unique([negocio_id, numero], map: "uq_ajuste_negocio_numero")
-  @@index([created_at], map: "idx_ajuste_fecha")
-  @@index([negocio_id], map: "idx_ajuste_negocio")
+  dispositivo dispositivo @relation(fields: [dispositivoId], references: [id], onUpdate: NoAction, map: "fk_ajuste_dispositivo")
+  negocio     negocio     @relation(fields: [negocioId], references: [id], onUpdate: NoAction, map: "fk_ajuste_negocio")
+  usuario     usuario     @relation(fields: [usuarioId], references: [id], onUpdate: NoAction, map: "fk_ajuste_usuario")
+
+  detalles detalle_ajuste[]
+
+  @@unique([negocioId, numero], map: "uq_ajuste_negocio_numero")
+  @@index([createdAt], map: "idx_ajuste_fecha")
+  @@index([negocioId], map: "idx_ajuste_negocio")
+  @@map("ajuste_inventario")
 }
 
 model categoria {
@@ -50,19 +53,21 @@ model categoria {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 
 model detalle_ajuste {
-  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ajuste_id         String            @db.Uuid
-  producto_id       String            @db.Uuid
-  cantidad          Decimal           @db.Decimal(14, 3)
-  stock_anterior    Decimal           @db.Decimal(14, 3)
-  stock_nuevo       Decimal           @db.Decimal(14, 3)
-  observaciones     String?
-  created_at        DateTime          @default(now()) @db.Timestamp(6)
-  ajuste_inventario ajuste_inventario @relation(fields: [ajuste_id], references: [id], onUpdate: NoAction, map: "fk_detalle_ajuste_ajuste")
-  producto          producto          @relation(fields: [producto_id], references: [id], onUpdate: NoAction, map: "fk_detalle_ajuste_producto")
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ajusteId      String   @map("ajuste_id") @db.Uuid
+  productoId    String   @map("producto_id") @db.Uuid
+  cantidad      Decimal  @db.Decimal(14, 3)
+  stockAnterior Decimal  @map("stock_anterior") @db.Decimal(14, 3)
+  stockNuevo    Decimal  @map("stock_nuevo") @db.Decimal(14, 3)
+  observaciones String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  @@index([ajuste_id], map: "idx_detalle_ajuste_ajuste")
-  @@index([producto_id], map: "idx_detalle_ajuste_producto")
+  ajuste   ajuste_inventario @relation(fields: [ajusteId], references: [id], onUpdate: NoAction, map: "fk_detalle_ajuste_ajuste")
+  producto producto          @relation(fields: [productoId], references: [id], onUpdate: NoAction, map: "fk_detalle_ajuste_producto")
+
+  @@index([ajusteId], map: "idx_detalle_ajuste_ajuste")
+  @@index([productoId], map: "idx_detalle_ajuste_producto")
+  @@map("detalle_ajuste")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -104,19 +109,21 @@ model detalle_salida {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 
 model detalle_venta {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  venta_id        String   @db.Uuid
-  producto_id     String   @db.Uuid
-  cantidad        Decimal  @db.Decimal(14, 3)
-  precio_unitario Decimal  @db.Decimal(14, 2)
-  descuento       Decimal  @default(0) @db.Decimal(14, 2)
-  subtotal        Decimal  @db.Decimal(14, 2)
-  created_at      DateTime @default(now()) @db.Timestamp(6)
-  producto        producto @relation(fields: [producto_id], references: [id], onUpdate: NoAction, map: "fk_detalle_venta_producto")
-  venta           venta    @relation(fields: [venta_id], references: [id], onUpdate: NoAction, map: "fk_detalle_venta_venta")
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ventaId        String   @map("venta_id") @db.Uuid
+  productoId     String   @map("producto_id") @db.Uuid
+  cantidad       Decimal  @db.Decimal(14, 3)
+  precioUnitario Decimal  @map("precio_unitario") @db.Decimal(14, 2)
+  descuento      Decimal  @default(0) @db.Decimal(14, 2)
+  subtotal       Decimal  @db.Decimal(14, 2)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  @@index([producto_id], map: "idx_detalle_venta_producto")
-  @@index([venta_id], map: "idx_detalle_venta_venta")
+  producto producto @relation(fields: [productoId], references: [id], onUpdate: NoAction, map: "fk_detalle_venta_producto")
+  venta    venta    @relation(fields: [ventaId], references: [id], onUpdate: NoAction, map: "fk_detalle_venta_venta")
+
+  @@index([productoId], map: "idx_detalle_venta_producto")
+  @@index([ventaId], map: "idx_detalle_venta_venta")
+  @@map("detalle_venta")
 }
 
 model dispositivo {
@@ -354,28 +361,33 @@ model usuario {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info. 
 
 model venta {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  negocio_id     String           @db.Uuid
-  usuario_id     String           @db.Uuid
-  dispositivo_id String           @db.Uuid
-  numero         BigInt
-  subtotal       Decimal          @default(0) @db.Decimal(14, 2)
-  descuento      Decimal          @default(0) @db.Decimal(14, 2)
-  impuesto       Decimal          @default(0) @db.Decimal(14, 2)
-  total          Decimal          @default(0) @db.Decimal(14, 2)
-  metodo_pago    metodo_pago      @default(EFECTIVO)
-  estado         estado_documento @default(COMPLETADA)
-  created_at     DateTime         @default(now()) @db.Timestamp(6)
-  updated_at     DateTime         @default(now()) @db.Timestamp(6)
-  detalle_venta  detalle_venta[]
-  dispositivo    dispositivo      @relation(fields: [dispositivo_id], references: [id], onUpdate: NoAction, map: "fk_venta_dispositivo")
-  negocio        negocio          @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_venta_negocio")
-  usuario        usuario          @relation(fields: [usuario_id], references: [id], onUpdate: NoAction, map: "fk_venta_usuario")
+  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocioId     String @map("negocio_id") @db.Uuid
+  usuarioId     String @map("usuario_id") @db.Uuid
+  dispositivoId String @map("dispositivo_id") @db.Uuid
 
-  @@unique([negocio_id, numero], map: "uq_venta_negocio_numero")
-  @@index([created_at], map: "idx_venta_fecha")
-  @@index([negocio_id], map: "idx_venta_negocio")
-  @@index([usuario_id], map: "idx_venta_usuario")
+  numero     BigInt
+  subtotal   Decimal          @default(0) @db.Decimal(14, 2)
+  descuento  Decimal          @default(0) @db.Decimal(14, 2)
+  impuesto   Decimal          @default(0) @db.Decimal(14, 2)
+  total      Decimal          @default(0) @db.Decimal(14, 2)
+  metodoPago metodo_pago      @default(EFECTIVO)
+  estado     estado_documento @default(COMPLETADA)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  detalleVenta detalle_venta[]
+
+  dispositivo dispositivo @relation(fields: [dispositivoId], references: [id], onUpdate: NoAction, map: "fk_venta_dispositivo")
+  negocio     negocio     @relation(fields: [negocioId], references: [id], onUpdate: NoAction, map: "fk_venta_negocio")
+  usuario     usuario     @relation(fields: [usuarioId], references: [id], onUpdate: NoAction, map: "fk_venta_usuario")
+
+  @@unique([negocioId, numero], map: "uq_venta_negocio_numero")
+  @@index([createdAt], map: "idx_venta_fecha")
+  @@index([negocioId], map: "idx_venta_negocio")
+  @@index([usuarioId], map: "idx_venta_usuario")
+  @@map("venta")
 }
 
 enum estado_dispositivo {

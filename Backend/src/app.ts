@@ -4,6 +4,7 @@ import categoriaRoutes from "./routes/categoria.routes.js";
 import proveedorRoutes from "./routes/proveedor.routes.js";
 import entradaRoutes from "./routes/entrada.routes.js";
 import salidaRoutes from "./routes/salida.routes.js";
+import ajusteRoutes from "./routes/ajuste.routes.js";
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use("/api/proveedores", proveedorRoutes);
 app.use("/api/entradas", entradaRoutes);
 
 app.use("/api/salidas", salidaRoutes);
+
+app.use("/api/ajustes", ajusteRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({
