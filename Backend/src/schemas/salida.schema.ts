@@ -9,10 +9,6 @@ const detalleSalidaSchema = z.object({
 });
 
 export const crearSalidaSchema = z.object({
-  negocioId: z.string().uuid("El negocioId no es válido"),
-
-  usuarioId: z.string().uuid("El usuarioId no es válido"),
-
   dispositivoId: z.string().uuid("El dispositivoId no es válido"),
 
   motivo: z.enum([
@@ -28,6 +24,17 @@ export const crearSalidaSchema = z.object({
   observaciones: z.string().trim().optional(),
 
   detalles: z
-    .array(detalleSalidaSchema)
-    .min(1, "La salida debe contener al menos un producto"),
+    .array(
+      z.object({
+        productoId: z.string().uuid("El productoId no es válido"),
+
+        cantidad: z.number().positive("La cantidad debe ser mayor que 0"),
+
+        observaciones: z.string().trim().optional(),
+      }),
+    )
+    .min(1, "Debe existir al menos un detalle"),
+});
+export const anularSalidaSchema = z.object({
+  dispositivoId: z.string().uuid("El dispositivoId no es válido"),
 });

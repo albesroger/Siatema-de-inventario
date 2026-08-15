@@ -7,9 +7,8 @@ interface DetalleSalidaDTO {
 }
 
 interface CrearSalidaDTO {
-  negocioId: string;
-  usuarioId: string;
   dispositivoId: string;
+
   motivo:
     | "PRODUCTO_DANADO"
     | "PRODUCTO_VENCIDO"
@@ -18,12 +17,22 @@ interface CrearSalidaDTO {
     | "ROBO"
     | "MUESTRA"
     | "OTRO";
+
   observaciones?: string;
+
   detalles: DetalleSalidaDTO[];
 }
 
 export class SalidaService {
-  async crear(data: CrearSalidaDTO) {
+  // ========================================================
+  // CREAR SALIDA
+  // ========================================================
+
+  async crear(
+    data: Omit<CrearSalidaDTO, "negocioId" | "usuarioId">,
+    negocioId: string,
+    usuarioId: string,
+  ) {
     return prisma.$transaction(async (tx) => {
       // =========================================
       // 1. VALIDAR NEGOCIO
@@ -31,7 +40,7 @@ export class SalidaService {
 
       const negocio = await tx.negocio.findUnique({
         where: {
-          id: data.negocioId,
+          id: negocioId,
         },
       });
 
@@ -45,8 +54,8 @@ export class SalidaService {
 
       const usuario = await tx.usuario.findFirst({
         where: {
-          id: data.usuarioId,
-          negocioId: data.negocioId,
+          id: usuarioId,
+          negocioId,
           estado: "ACTIVO",
         },
       });
@@ -64,7 +73,7 @@ export class SalidaService {
       const dispositivo = await tx.dispositivo.findFirst({
         where: {
           id: data.dispositivoId,
-          negocioId: data.negocioId,
+          negocioId,
           estado: "ACTIVO",
         },
       });
@@ -81,7 +90,7 @@ export class SalidaService {
 
       const ultimaSalida = await tx.salida_inventario.findFirst({
         where: {
-          negocioId: data.negocioId,
+          negocioId,
         },
         orderBy: {
           numero: "desc",
@@ -101,7 +110,7 @@ export class SalidaService {
           id: {
             in: productoIds,
           },
-          negocioId: data.negocioId,
+          negocioId,
           estado: "ACTIVO",
         },
       });
@@ -138,9 +147,9 @@ export class SalidaService {
 
       const salida = await tx.salida_inventario.create({
         data: {
-          negocioId: data.negocioId,
+          negocioId,
 
-          usuarioId: data.usuarioId,
+          usuarioId,
 
           dispositivoId: data.dispositivoId,
 
@@ -210,11 +219,11 @@ export class SalidaService {
 
         await tx.movimiento_inventario.create({
           data: {
-            negocioId: data.negocioId,
+            negocioId,
 
             productoId: producto.id,
 
-            usuarioId: data.usuarioId,
+            usuarioId,
 
             dispositivoId: data.dispositivoId,
 
@@ -256,14 +265,20 @@ export class SalidaService {
     });
   }
 
+  // ========================================================
+  // LISTAR
+  // ========================================================
+
   async listar(negocioId: string) {
     return prisma.salida_inventario.findMany({
       where: {
         negocioId,
       },
+
       orderBy: {
         numero: "desc",
       },
+
       include: {
         usuario: {
           select: {
@@ -272,6 +287,7 @@ export class SalidaService {
             username: true,
           },
         },
+
         dispositivo: {
           select: {
             id: true,
@@ -279,6 +295,7 @@ export class SalidaService {
             identificador: true,
           },
         },
+
         detalles: {
           include: {
             producto: {
@@ -294,12 +311,17 @@ export class SalidaService {
     });
   }
 
+  // ========================================================
+  // OBTENER POR ID
+  // ========================================================
+
   async obtenerPorId(negocioId: string, id: string) {
     const salida = await prisma.salida_inventario.findFirst({
       where: {
         id,
         negocioId,
       },
+
       include: {
         usuario: {
           select: {
@@ -340,6 +362,10 @@ export class SalidaService {
     return salida;
   }
 
+  // ========================================================
+  // ANULAR
+  // ========================================================
+
   async anular(
     negocioId: string,
     salidaId: string,
@@ -356,6 +382,7 @@ export class SalidaService {
           id: salidaId,
           negocioId,
         },
+
         include: {
           detalles: true,
         },
@@ -438,6 +465,7 @@ export class SalidaService {
           where: {
             id: producto.id,
           },
+
           data: {
             stockActual: stockPosterior,
           },
@@ -478,13 +506,15 @@ export class SalidaService {
       // 8. CAMBIAR ESTADO
       // =========================================
 
-      const salidaAnulada = await tx.salida_inventario.update({
+      return tx.salida_inventario.update({
         where: {
           id: salida.id,
         },
+
         data: {
           estado: "ANULADA",
         },
+
         include: {
           detalles: {
             include: {
@@ -493,8 +523,6 @@ export class SalidaService {
           },
         },
       });
-
-      return salidaAnulada;
     });
   }
 }
