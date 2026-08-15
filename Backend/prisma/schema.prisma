@@ -109,21 +109,22 @@ model detalle_salida {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 
 model detalle_venta {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ventaId        String   @map("venta_id") @db.Uuid
-  productoId     String   @map("producto_id") @db.Uuid
-  cantidad       Decimal  @db.Decimal(14, 3)
-  precioUnitario Decimal  @map("precio_unitario") @db.Decimal(14, 2)
-  descuento      Decimal  @default(0) @db.Decimal(14, 2)
-  subtotal       Decimal  @db.Decimal(14, 2)
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ventaId    String @map("venta_id") @db.Uuid
+  productoId String @map("producto_id") @db.Uuid
+
+  cantidad       Decimal @db.Decimal(14, 3)
+  precioUnitario Decimal @map("precio_unitario") @db.Decimal(14, 2)
+  descuento      Decimal @default(0) @db.Decimal(14, 2)
+  subtotal       Decimal @db.Decimal(14, 2)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
   producto producto @relation(fields: [productoId], references: [id], onUpdate: NoAction, map: "fk_detalle_venta_producto")
   venta    venta    @relation(fields: [ventaId], references: [id], onUpdate: NoAction, map: "fk_detalle_venta_venta")
 
   @@index([productoId], map: "idx_detalle_venta_producto")
   @@index([ventaId], map: "idx_detalle_venta_venta")
-  @@map("detalle_venta")
 }
 
 model dispositivo {
@@ -361,27 +362,23 @@ model usuario {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info. 
 
 model venta {
-  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  negocioId     String @map("negocio_id") @db.Uuid
-  usuarioId     String @map("usuario_id") @db.Uuid
-  dispositivoId String @map("dispositivo_id") @db.Uuid
-
-  numero     BigInt
-  subtotal   Decimal          @default(0) @db.Decimal(14, 2)
-  descuento  Decimal          @default(0) @db.Decimal(14, 2)
-  impuesto   Decimal          @default(0) @db.Decimal(14, 2)
-  total      Decimal          @default(0) @db.Decimal(14, 2)
-  metodoPago metodo_pago      @default(EFECTIVO)
-  estado     estado_documento @default(COMPLETADA)
-
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(6)
-
-  detalleVenta detalle_venta[]
-
-  dispositivo dispositivo @relation(fields: [dispositivoId], references: [id], onUpdate: NoAction, map: "fk_venta_dispositivo")
-  negocio     negocio     @relation(fields: [negocioId], references: [id], onUpdate: NoAction, map: "fk_venta_negocio")
-  usuario     usuario     @relation(fields: [usuarioId], references: [id], onUpdate: NoAction, map: "fk_venta_usuario")
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocioId     String           @map("negocio_id") @db.Uuid
+  usuarioId     String           @map("usuario_id") @db.Uuid
+  dispositivoId String           @map("dispositivo_id") @db.Uuid
+  numero        BigInt
+  subtotal      Decimal          @default(0) @db.Decimal(14, 2)
+  descuento     Decimal          @default(0) @db.Decimal(14, 2)
+  impuesto      Decimal          @default(0) @db.Decimal(14, 2)
+  total         Decimal          @default(0) @db.Decimal(14, 2)
+  metodoPago    metodo_pago      @default(EFECTIVO) @map("metodo_pago")
+  estado        estado_documento @default(COMPLETADA)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime         @default(now()) @map("updated_at") @db.Timestamp(6)
+  detalleVenta  detalle_venta[]
+  dispositivo   dispositivo      @relation(fields: [dispositivoId], references: [id], onUpdate: NoAction, map: "fk_venta_dispositivo")
+  negocio       negocio          @relation(fields: [negocioId], references: [id], onUpdate: NoAction, map: "fk_venta_negocio")
+  usuario       usuario          @relation(fields: [usuarioId], references: [id], onUpdate: NoAction, map: "fk_venta_usuario")
 
   @@unique([negocioId, numero], map: "uq_venta_negocio_numero")
   @@index([createdAt], map: "idx_venta_fecha")
