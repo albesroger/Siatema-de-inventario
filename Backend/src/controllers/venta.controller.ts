@@ -1,11 +1,23 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import ventaService from "../services/venta.service.js";
 import { serializeBigInt } from "../utils/bigint.js";
+import { AuthRequest } from "../middlewares/auth.middleware.js";
 
 export class VentaController {
-  async crear(req: Request, res: Response) {
+  async crear(req: AuthRequest, res: Response) {
     try {
-      const venta = await ventaService.crearVenta(req.body);
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Usuario no autenticado",
+        });
+      }
+
+      const venta = await ventaService.crearVenta(
+        req.body,
+        req.user.usuarioId,
+        req.user.negocioId,
+      );
 
       return res.status(201).json({
         success: true,
@@ -23,18 +35,16 @@ export class VentaController {
     }
   }
 
-  async listar(req: Request, res: Response) {
+  async listar(req: AuthRequest, res: Response) {
     try {
-      const negocioId = req.query.negocioId;
-
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El parámetro negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
 
-      const ventas = await ventaService.listarVentas(negocioId);
+      const ventas = await ventaService.listarVentas(req.user.negocioId);
 
       return res.status(200).json({
         success: true,
@@ -53,21 +63,27 @@ export class VentaController {
     }
   }
 
-  async obtenerPorId(req: Request, res: Response) {
+  async obtenerPorId(req: AuthRequest, res: Response) {
     try {
-      const { id } = req.params;
-      const { negocioId } = req.query;
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Usuario no autenticado",
+        });
+      }
 
-      if (typeof negocioId !== "string") {
+      const { id } = req.params;
+
+      if (typeof id !== "string") {
         return res.status(400).json({
           success: false,
-          message: "El negocioId es requerido",
+          message: "El ID de la venta es obligatorio",
         });
       }
 
       const venta = await ventaService.obtenerVentaPorId(
-        id as string,
-        negocioId,
+        id,
+        req.user.negocioId,
       );
 
       return res.status(200).json({
@@ -85,8 +101,15 @@ export class VentaController {
     }
   }
 
-  async anular(req: Request, res: Response) {
+  async anular(req: AuthRequest, res: Response) {
     try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Usuario no autenticado",
+        });
+      }
+
       const { id } = req.params;
 
       if (typeof id !== "string") {
@@ -96,7 +119,12 @@ export class VentaController {
         });
       }
 
-      const venta = await ventaService.anularVenta(id, req.body);
+      const venta = await ventaService.anularVenta(
+        id,
+        req.body,
+        req.user.usuarioId,
+        req.user.negocioId,
+      );
 
       return res.status(200).json({
         success: true,

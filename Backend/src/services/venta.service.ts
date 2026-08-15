@@ -4,7 +4,11 @@ import { prisma } from "../config/database.js";
 import { CrearVentaInput, AnularVentaInput } from "../schemas/venta.schema.js";
 
 export class VentaService {
-  async crearVenta(data: CrearVentaInput) {
+  async crearVenta(
+    data: Omit<CrearVentaInput, "usuarioId" | "negocioId">,
+    usuarioId: string,
+    negocioId: string,
+  ) {
     return prisma.$transaction(async (tx) => {
       // ========================================================
       // 1. VALIDAR USUARIO
@@ -12,8 +16,8 @@ export class VentaService {
 
       const usuario = await tx.usuario.findFirst({
         where: {
-          id: data.usuarioId,
-          negocioId: data.negocioId,
+          id: usuarioId,
+          negocioId,
           estado: "ACTIVO",
         },
       });
@@ -31,7 +35,7 @@ export class VentaService {
       const dispositivo = await tx.dispositivo.findFirst({
         where: {
           id: data.dispositivoId,
-          negocioId: data.negocioId,
+          negocioId,
           estado: "ACTIVO",
         },
       });
@@ -43,7 +47,7 @@ export class VentaService {
       }
 
       // ========================================================
-      // 3. VALIDAR QUE NO HAYA PRODUCTOS REPETIDOS
+      // 3. VALIDAR PRODUCTOS REPETIDOS
       // ========================================================
 
       const productosIds = data.detalles.map((detalle) => detalle.productoId);
@@ -65,13 +69,13 @@ export class VentaService {
           id: {
             in: productosIds,
           },
-          negocioId: data.negocioId,
+          negocioId,
           estado: "ACTIVO",
         },
       });
 
       // ========================================================
-      // 5. VALIDAR QUE TODOS LOS PRODUCTOS EXISTAN
+      // 5. VALIDAR PRODUCTOS
       // ========================================================
 
       if (productos.length !== productosIds.length) {
@@ -97,10 +101,8 @@ export class VentaService {
 
         const descuento = new Prisma.Decimal(detalle.descuento ?? 0);
 
-        // cantidad × precio
         const importe = cantidad.mul(precioUnitario);
 
-        // importe - descuento
         const subtotal = importe.sub(descuento);
 
         if (subtotal.lessThan(0)) {
@@ -129,7 +131,7 @@ export class VentaService {
       });
 
       // ========================================================
-      // 7. CALCULAR SUBTOTAL GENERAL
+      // 7. SUBTOTAL
       // ========================================================
 
       const subtotal = detallesCalculados.reduce(
@@ -162,12 +164,12 @@ export class VentaService {
       const total = subtotal.sub(descuento).add(impuesto);
 
       // ========================================================
-      // 11. GENERAR NÚMERO DE VENTA
+      // 11. GENERAR NÚMERO
       // ========================================================
 
       const ultimaVenta = await tx.venta.findFirst({
         where: {
-          negocioId: data.negocioId,
+          negocioId,
         },
         orderBy: {
           numero: "desc",
@@ -185,8 +187,8 @@ export class VentaService {
 
       const venta = await tx.venta.create({
         data: {
-          negocioId: data.negocioId,
-          usuarioId: data.usuarioId,
+          negocioId,
+          usuarioId,
           dispositivoId: data.dispositivoId,
 
           numero,
@@ -251,9 +253,9 @@ export class VentaService {
 
         await tx.movimiento_inventario.create({
           data: {
-            negocioId: data.negocioId,
+            negocioId,
             productoId: producto.id,
-            usuarioId: data.usuarioId,
+            usuarioId,
             dispositivoId: data.dispositivoId,
 
             tipo: "VENTA",
@@ -289,6 +291,7 @@ export class VentaService {
       });
     });
   }
+
   async obtenerVentaPorId(id: string, negocioId: string) {
     const venta = await prisma.venta.findFirst({
       where: {
@@ -358,7 +361,12 @@ export class VentaService {
     return ventas;
   }
 
-  async anularVenta(ventaId: string, data: AnularVentaInput) {
+  async anularVenta(
+    ventaId: string,
+    data: Omit<AnularVentaInput, "negocioId" | "usuarioId">,
+    usuarioId: string,
+    negocioId: string,
+  ) {
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // ========================================================
       // 1. BUSCAR VENTA
@@ -367,7 +375,7 @@ export class VentaService {
       const venta = await tx.venta.findFirst({
         where: {
           id: ventaId,
-          negocioId: data.negocioId,
+          negocioId,
         },
         include: {
           detalleVenta: true,
@@ -420,9 +428,9 @@ export class VentaService {
 
         await tx.movimiento_inventario.create({
           data: {
-            negocioId: venta.negocioId,
+            negocioId,
             productoId: producto.id,
-            usuarioId: data.usuarioId,
+            usuarioId,
             dispositivoId: venta.dispositivoId,
 
             tipo: "ENTRADA",

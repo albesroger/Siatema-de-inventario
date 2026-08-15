@@ -21,10 +21,6 @@ export const detalleVentaSchema = z.object({
  */
 
 export const crearVentaSchema = z.object({
-  negocioId: z.string().uuid("El negocioId debe ser un UUID válido"),
-
-  usuarioId: z.string().uuid("El usuarioId debe ser un UUID válido"),
-
   dispositivoId: z.string().uuid("El dispositivoId debe ser un UUID válido"),
 
   descuento: z.number().min(0, "El descuento no puede ser negativo").default(0),
@@ -47,10 +43,6 @@ export const crearVentaSchema = z.object({
  */
 
 export const anularVentaSchema = z.object({
-  negocioId: z.string().uuid("El negocioId debe ser un UUID válido"),
-
-  usuarioId: z.string().uuid("El usuarioId debe ser un UUID válido"),
-
   motivo: z
     .string()
     .trim()
