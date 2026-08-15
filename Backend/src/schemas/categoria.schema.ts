@@ -1,8 +1,10 @@
 import { z } from "zod";
 
-export const crearCategoriaSchema = z.object({
-  negocioId: z.string().uuid("El negocioId no es válido"),
+// ========================================================
+// CREAR CATEGORÍA
+// ========================================================
 
+export const crearCategoriaSchema = z.object({
   nombre: z
     .string()
     .trim()
@@ -15,6 +17,10 @@ export const crearCategoriaSchema = z.object({
     .max(500, "La descripción no puede superar los 500 caracteres")
     .optional(),
 });
+
+// ========================================================
+// ACTUALIZAR CATEGORÍA
+// ========================================================
 
 export const actualizarCategoriaSchema = z.object({
   nombre: z

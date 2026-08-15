@@ -1,7 +1,6 @@
 import { prisma } from "../config/database.js";
 
 interface CrearCategoriaDTO {
-  negocioId: string;
   nombre: string;
   descripcion?: string;
 }
@@ -12,11 +11,18 @@ interface ActualizarCategoriaDTO {
 }
 
 export class CategoriaService {
-  async crear(data: CrearCategoriaDTO) {
-    // 1. Comprobar que el negocio existe
+  // ========================================================
+  // CREAR CATEGORÍA
+  // ========================================================
+
+  async crear(data: CrearCategoriaDTO, negocioId: string) {
+    // =========================================
+    // 1. VALIDAR NEGOCIO
+    // =========================================
+
     const negocio = await prisma.negocio.findUnique({
       where: {
-        id: data.negocioId,
+        id: negocioId,
       },
     });
 
@@ -24,12 +30,15 @@ export class CategoriaService {
       throw new Error("El negocio no existe");
     }
 
-    // 2. Comprobar que no exista otra categoría
-    // con el mismo nombre dentro del negocio
+    // =========================================
+    // 2. VALIDAR NOMBRE DUPLICADO
+    // =========================================
+
     const categoriaExistente = await prisma.categoria.findFirst({
       where: {
-        negocioId: data.negocioId,
+        negocioId,
         nombre: data.nombre,
+        estado: "ACTIVO",
       },
     });
 
@@ -37,15 +46,23 @@ export class CategoriaService {
       throw new Error("Ya existe una categoría con ese nombre en este negocio");
     }
 
-    // 3. Crear categoría
+    // =========================================
+    // 3. CREAR CATEGORÍA
+    // =========================================
+
     return prisma.categoria.create({
       data: {
-        negocioId: data.negocioId,
+        negocioId,
         nombre: data.nombre,
         descripcion: data.descripcion,
+        estado: "ACTIVO",
       },
     });
   }
+
+  // ========================================================
+  // OBTENER TODAS
+  // ========================================================
 
   async obtenerTodos(negocioId: string) {
     return prisma.categoria.findMany({
@@ -53,6 +70,7 @@ export class CategoriaService {
         negocioId,
         estado: "ACTIVO",
       },
+
       include: {
         _count: {
           select: {
@@ -60,18 +78,25 @@ export class CategoriaService {
           },
         },
       },
+
       orderBy: {
         nombre: "asc",
       },
     });
   }
 
+  // ========================================================
+  // OBTENER POR ID
+  // ========================================================
+
   async obtenerPorId(negocioId: string, id: string) {
     return prisma.categoria.findFirst({
       where: {
         id,
         negocioId,
+        estado: "ACTIVO",
       },
+
       include: {
         _count: {
           select: {
@@ -82,16 +107,24 @@ export class CategoriaService {
     });
   }
 
+  // ========================================================
+  // ACTUALIZAR
+  // ========================================================
+
   async actualizar(
     negocioId: string,
     id: string,
     data: ActualizarCategoriaDTO,
   ) {
-    // 1. Buscar categoría
+    // =========================================
+    // 1. BUSCAR CATEGORÍA ACTIVA
+    // =========================================
+
     const categoria = await prisma.categoria.findFirst({
       where: {
         id,
         negocioId,
+        estado: "ACTIVO",
       },
     });
 
@@ -99,13 +132,16 @@ export class CategoriaService {
       throw new Error("La categoría no existe");
     }
 
-    // 2. Si se está cambiando el nombre,
-    // comprobar duplicados
+    // =========================================
+    // 2. VALIDAR NOMBRE DUPLICADO
+    // =========================================
+
     if (data.nombre && data.nombre !== categoria.nombre) {
       const categoriaExistente = await prisma.categoria.findFirst({
         where: {
           negocioId,
           nombre: data.nombre,
+          estado: "ACTIVO",
           NOT: {
             id,
           },
@@ -119,11 +155,15 @@ export class CategoriaService {
       }
     }
 
-    // 3. Actualizar
+    // =========================================
+    // 3. ACTUALIZAR
+    // =========================================
+
     return prisma.categoria.update({
       where: {
         id,
       },
+
       data: {
         nombre: data.nombre,
         descripcion: data.descripcion,
@@ -131,12 +171,20 @@ export class CategoriaService {
     });
   }
 
+  // ========================================================
+  // ELIMINAR
+  // ========================================================
+
   async eliminar(negocioId: string, id: string) {
-    // 1. Buscar categoría
+    // =========================================
+    // 1. BUSCAR CATEGORÍA ACTIVA
+    // =========================================
+
     const categoria = await prisma.categoria.findFirst({
       where: {
         id,
         negocioId,
+        estado: "ACTIVO",
       },
     });
 
@@ -144,7 +192,10 @@ export class CategoriaService {
       throw new Error("La categoría no existe");
     }
 
-    // 2. Verificar si tiene productos
+    // =========================================
+    // 2. VERIFICAR PRODUCTOS ACTIVOS
+    // =========================================
+
     const cantidadProductos = await prisma.producto.count({
       where: {
         categoriaId: id,
@@ -158,11 +209,15 @@ export class CategoriaService {
       );
     }
 
-    // 3. Eliminación lógica
+    // =========================================
+    // 3. ELIMINACIÓN LÓGICA
+    // =========================================
+
     return prisma.categoria.update({
       where: {
         id,
       },
+
       data: {
         estado: "INACTIVO",
       },

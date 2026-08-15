@@ -1,13 +1,28 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 
+import { AuthRequest } from "../middlewares/auth.middleware.js";
 import { CategoriaService } from "../services/categoria.service.js";
 
 const categoriaService = new CategoriaService();
 
 export class CategoriaController {
-  async crear(req: Request, res: Response) {
+  // ========================================================
+  // CREAR
+  // ========================================================
+
+  async crear(req: AuthRequest, res: Response) {
     try {
-      const categoria = await categoriaService.crear(req.body);
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Usuario no autenticado",
+        });
+      }
+
+      const categoria = await categoriaService.crear(
+        req.body,
+        req.user.negocioId,
+      );
 
       return res.status(201).json({
         success: true,
@@ -24,18 +39,22 @@ export class CategoriaController {
     }
   }
 
-  async obtenerTodos(req: Request, res: Response) {
-    try {
-      const negocioId = req.query.negocioId;
+  // ========================================================
+  // OBTENER TODOS
+  // ========================================================
 
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+  async obtenerTodos(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
 
-      const categorias = await categoriaService.obtenerTodos(negocioId);
+      const categorias = await categoriaService.obtenerTodos(
+        req.user.negocioId,
+      );
 
       return res.json({
         success: true,
@@ -44,23 +63,28 @@ export class CategoriaController {
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Error al obtener las categorías",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error al obtener las categorías",
       });
     }
   }
 
-  async obtenerPorId(req: Request, res: Response) {
+  // ========================================================
+  // OBTENER POR ID
+  // ========================================================
+
+  async obtenerPorId(req: AuthRequest, res: Response) {
     try {
-      const negocioId = req.query.negocioId;
-
-      const id = req.params.id;
-
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
+
+      const { id } = req.params;
 
       if (typeof id !== "string") {
         return res.status(400).json({
@@ -69,7 +93,10 @@ export class CategoriaController {
         });
       }
 
-      const categoria = await categoriaService.obtenerPorId(negocioId, id);
+      const categoria = await categoriaService.obtenerPorId(
+        req.user.negocioId,
+        id,
+      );
 
       if (!categoria) {
         return res.status(404).json({
@@ -85,23 +112,28 @@ export class CategoriaController {
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Error al obtener la categoría",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error al obtener la categoría",
       });
     }
   }
 
-  async actualizar(req: Request, res: Response) {
+  // ========================================================
+  // ACTUALIZAR
+  // ========================================================
+
+  async actualizar(req: AuthRequest, res: Response) {
     try {
-      const negocioId = req.body.negocioId;
-
-      const id = req.params.id;
-
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
+
+      const { id } = req.params;
 
       if (typeof id !== "string") {
         return res.status(400).json({
@@ -111,7 +143,7 @@ export class CategoriaController {
       }
 
       const categoria = await categoriaService.actualizar(
-        negocioId,
+        req.user.negocioId,
         id,
         req.body,
       );
@@ -131,18 +163,20 @@ export class CategoriaController {
     }
   }
 
-  async eliminar(req: Request, res: Response) {
+  // ========================================================
+  // ELIMINAR
+  // ========================================================
+
+  async eliminar(req: AuthRequest, res: Response) {
     try {
-      const negocioId = req.query.negocioId;
-
-      const id = req.params.id;
-
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
+
+      const { id } = req.params;
 
       if (typeof id !== "string") {
         return res.status(400).json({
@@ -151,7 +185,7 @@ export class CategoriaController {
         });
       }
 
-      const categoria = await categoriaService.eliminar(negocioId, id);
+      const categoria = await categoriaService.eliminar(req.user.negocioId, id);
 
       return res.json({
         success: true,
