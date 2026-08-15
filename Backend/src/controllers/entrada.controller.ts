@@ -1,13 +1,25 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 
+import { AuthRequest } from "../middlewares/auth.middleware.js";
 import { EntradaService } from "../services/entrada.service.js";
 
 const entradaService = new EntradaService();
 
 export class EntradaController {
-  async crear(req: Request, res: Response) {
+  async crear(req: AuthRequest, res: Response) {
     try {
-      const entrada = await entradaService.crear(req.body);
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Usuario no autenticado",
+        });
+      }
+
+      const entrada = await entradaService.crear(
+        req.body,
+        req.user.usuarioId,
+        req.user.negocioId,
+      );
 
       return res.status(201).json({
         success: true,
@@ -28,22 +40,24 @@ export class EntradaController {
     }
   }
 
-  async listar(req: Request, res: Response) {
+  async listar(req: AuthRequest, res: Response) {
     try {
-      const negocioId = req.query.negocioId;
-
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
 
-      const entradas = await entradaService.listar(negocioId);
+      const entradas = await entradaService.listar(req.user.negocioId);
 
       return res.json({
         success: true,
-        data: entradas,
+        data: JSON.parse(
+          JSON.stringify(entradas, (_key, value) =>
+            typeof value === "bigint" ? value.toString() : value,
+          ),
+        ),
       });
     } catch (error) {
       return res.status(400).json({
@@ -56,18 +70,16 @@ export class EntradaController {
     }
   }
 
-  async obtenerPorId(req: Request, res: Response) {
+  async obtenerPorId(req: AuthRequest, res: Response) {
     try {
-      const { id } = req.params;
-
-      const negocioId = req.query.negocioId;
-
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
+
+      const { id } = req.params;
 
       if (typeof id !== "string") {
         return res.status(400).json({
@@ -76,11 +88,15 @@ export class EntradaController {
         });
       }
 
-      const entrada = await entradaService.obtenerPorId(negocioId, id);
+      const entrada = await entradaService.obtenerPorId(req.user.negocioId, id);
 
       return res.json({
         success: true,
-        data: entrada,
+        data: JSON.parse(
+          JSON.stringify(entrada, (_key, value) =>
+            typeof value === "bigint" ? value.toString() : value,
+          ),
+        ),
       });
     } catch (error) {
       return res.status(404).json({
@@ -91,11 +107,17 @@ export class EntradaController {
     }
   }
 
-  async anular(req: Request, res: Response) {
+  async anular(req: AuthRequest, res: Response) {
     try {
-      const { id } = req.params;
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Usuario no autenticado",
+        });
+      }
 
-      const { negocioId, usuarioId, dispositivoId } = req.body;
+      const { id } = req.params;
+      const { dispositivoId } = req.body;
 
       if (typeof id !== "string") {
         return res.status(400).json({
@@ -104,21 +126,17 @@ export class EntradaController {
         });
       }
 
-      if (
-        typeof negocioId !== "string" ||
-        typeof usuarioId !== "string" ||
-        typeof dispositivoId !== "string"
-      ) {
+      if (typeof dispositivoId !== "string") {
         return res.status(400).json({
           success: false,
-          message: "negocioId, usuarioId y dispositivoId son obligatorios",
+          message: "El dispositivoId es obligatorio",
         });
       }
 
       const entrada = await entradaService.anular(
-        negocioId,
         id,
-        usuarioId,
+        req.user.usuarioId,
+        req.user.negocioId,
         dispositivoId,
       );
 

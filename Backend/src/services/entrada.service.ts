@@ -8,9 +8,7 @@ interface DetalleEntradaDTO {
 }
 
 interface CrearEntradaDTO {
-  negocioId: string;
   proveedorId?: string;
-  usuarioId: string;
   dispositivoId: string;
   numeroDocumento?: string;
   descuento: number;
@@ -19,7 +17,7 @@ interface CrearEntradaDTO {
 }
 
 export class EntradaService {
-  async crear(data: CrearEntradaDTO) {
+  async crear(data: CrearEntradaDTO, usuarioId: string, negocioId: string) {
     return prisma.$transaction(async (tx) => {
       // =========================================
       // 1. VALIDAR NEGOCIO
@@ -27,7 +25,7 @@ export class EntradaService {
 
       const negocio = await tx.negocio.findUnique({
         where: {
-          id: data.negocioId,
+          id: negocioId,
         },
       });
 
@@ -41,8 +39,8 @@ export class EntradaService {
 
       const usuario = await tx.usuario.findFirst({
         where: {
-          id: data.usuarioId,
-          negocioId: data.negocioId,
+          id: usuarioId,
+          negocioId,
           estado: "ACTIVO",
         },
       });
@@ -60,7 +58,7 @@ export class EntradaService {
       const dispositivo = await tx.dispositivo.findFirst({
         where: {
           id: data.dispositivoId,
-          negocioId: data.negocioId,
+          negocioId,
           estado: "ACTIVO",
         },
       });
@@ -79,7 +77,7 @@ export class EntradaService {
         const proveedor = await tx.proveedor.findFirst({
           where: {
             id: data.proveedorId,
-            negocioId: data.negocioId,
+            negocioId,
             estado: "ACTIVO",
           },
         });
@@ -95,7 +93,7 @@ export class EntradaService {
 
       const ultimaEntrada = await tx.entrada_inventario.findFirst({
         where: {
-          negocioId: data.negocioId,
+          negocioId,
         },
         orderBy: {
           numero: "desc",
@@ -117,7 +115,7 @@ export class EntradaService {
           id: {
             in: productoIds,
           },
-          negocioId: data.negocioId,
+          negocioId,
           estado: "ACTIVO",
         },
       });
@@ -164,9 +162,9 @@ export class EntradaService {
 
       const entrada = await tx.entrada_inventario.create({
         data: {
-          negocioId: data.negocioId,
+          negocioId,
           proveedorId: data.proveedorId,
-          usuarioId: data.usuarioId,
+          usuarioId,
           dispositivoId: data.dispositivoId,
 
           numero,
@@ -231,7 +229,6 @@ export class EntradaService {
           },
           data: {
             stockActual: stockPosterior,
-
             precioCompra: detalle.costoUnitario,
           },
         });
@@ -242,11 +239,11 @@ export class EntradaService {
 
         await tx.movimiento_inventario.create({
           data: {
-            negocioId: data.negocioId,
+            negocioId,
 
             productoId: detalle.productoId,
 
-            usuarioId: data.usuarioId,
+            usuarioId,
 
             dispositivoId: data.dispositivoId,
 
@@ -255,7 +252,6 @@ export class EntradaService {
             cantidad: detalle.cantidad,
 
             stockAnterior,
-
             stockPosterior,
 
             referenciaTipo: "ENTRADA",
@@ -372,9 +368,9 @@ export class EntradaService {
   }
 
   async anular(
-    negocioId: string,
     entradaId: string,
     usuarioId: string,
+    negocioId: string,
     dispositivoId: string,
   ) {
     return prisma.$transaction(async (tx) => {
@@ -503,7 +499,6 @@ export class EntradaService {
             cantidad,
 
             stockAnterior,
-
             stockPosterior,
 
             referenciaTipo: "ENTRADA",

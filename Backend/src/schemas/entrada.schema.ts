@@ -16,11 +16,7 @@ const detalleEntradaSchema = z.object({
 });
 
 export const crearEntradaSchema = z.object({
-  negocioId: z.string().uuid("El negocioId no es válido"),
-
   proveedorId: z.string().uuid("El proveedorId no es válido").optional(),
-
-  usuarioId: z.string().uuid("El usuarioId no es válido"),
 
   dispositivoId: z.string().uuid("El dispositivoId no es válido"),
 
