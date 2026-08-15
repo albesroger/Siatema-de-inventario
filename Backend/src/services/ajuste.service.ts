@@ -3,11 +3,11 @@ import { prisma } from "../config/database.js";
 import { CrearAjusteDTO } from "../schemas/ajuste.schema.js";
 
 export class AjusteService {
-  // =====================================================
-  // CREAR AJUSTE
-  // =====================================================
-
-  async crear(data: CrearAjusteDTO) {
+  async crear(
+    data: Omit<CrearAjusteDTO, "negocioId" | "usuarioId">,
+    negocioId: string,
+    usuarioId: string,
+  ) {
     return prisma.$transaction(async (tx) => {
       // =================================================
       // 1. VALIDAR NEGOCIO
@@ -15,7 +15,7 @@ export class AjusteService {
 
       const negocio = await tx.negocio.findUnique({
         where: {
-          id: data.negocioId,
+          id: negocioId,
         },
       });
 
@@ -29,8 +29,8 @@ export class AjusteService {
 
       const usuario = await tx.usuario.findFirst({
         where: {
-          id: data.usuarioId,
-          negocioId: data.negocioId,
+          id: usuarioId,
+          negocioId,
           estado: "ACTIVO",
         },
       });
@@ -48,7 +48,7 @@ export class AjusteService {
       const dispositivo = await tx.dispositivo.findFirst({
         where: {
           id: data.dispositivoId,
-          negocioId: data.negocioId,
+          negocioId,
           estado: "ACTIVO",
         },
       });
@@ -65,7 +65,7 @@ export class AjusteService {
 
       const ultimoAjuste = await tx.ajuste_inventario.findFirst({
         where: {
-          negocioId: data.negocioId,
+          negocioId,
         },
         orderBy: {
           numero: "desc",
@@ -85,14 +85,12 @@ export class AjusteService {
           id: {
             in: productoIds,
           },
-
-          negocioId: data.negocioId,
-
+          negocioId,
           estado: "ACTIVO",
         },
       });
 
-      if (productos.length !== productoIds.length) {
+      if (productos.length !== new Set(productoIds).size) {
         throw new Error(
           "Uno o más productos no existen, están inactivos o no pertenecen al negocio",
         );
@@ -104,9 +102,9 @@ export class AjusteService {
 
       const ajuste = await tx.ajuste_inventario.create({
         data: {
-          negocioId: data.negocioId,
+          negocioId,
 
-          usuarioId: data.usuarioId,
+          usuarioId,
 
           dispositivoId: data.dispositivoId,
 
@@ -210,11 +208,11 @@ export class AjusteService {
 
         await tx.movimiento_inventario.create({
           data: {
-            negocioId: data.negocioId,
+            negocioId,
 
             productoId: producto.id,
 
-            usuarioId: data.usuarioId,
+            usuarioId,
 
             dispositivoId: data.dispositivoId,
 
@@ -276,5 +274,44 @@ export class AjusteService {
         },
       });
     });
+  }
+
+  async listar(negocioId: string) {
+    const ajustes = await prisma.ajuste_inventario.findMany({
+      where: { negocioId },
+      include: {
+        detalles: {
+          include: {
+            producto: {
+              select: {
+                id: true,
+                codigo: true,
+                nombre: true,
+                unidadMedida: true,
+              },
+            },
+          },
+        },
+        usuario: {
+          select: {
+            id: true,
+            nombre: true,
+            username: true,
+          },
+        },
+        dispositivo: {
+          select: {
+            id: true,
+            nombre: true,
+            identificador: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return ajustes;
   }
 }

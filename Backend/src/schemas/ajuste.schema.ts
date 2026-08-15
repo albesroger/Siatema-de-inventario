@@ -19,10 +19,6 @@ const detalleAjusteSchema = z.object({
 
 export const crearAjusteSchema = z
   .object({
-    negocioId: z.string().uuid("El negocioId no es válido"),
-
-    usuarioId: z.string().uuid("El usuarioId no es válido"),
-
     dispositivoId: z.string().uuid("El dispositivoId no es válido"),
 
     tipo: tipoAjusteSchema,
