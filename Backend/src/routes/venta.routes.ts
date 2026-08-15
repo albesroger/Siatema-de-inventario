@@ -5,8 +5,10 @@ import {
   crearVentaSchema,
   anularVentaSchema,
 } from "../schemas/venta.schema.js";
+import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = Router();
+router.use(authenticate);
 
 router.post("/", validate(crearVentaSchema), ventaController.crear);
 
