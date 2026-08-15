@@ -435,6 +435,7 @@ enum motivo_salida {
 
 enum rol_usuario {
   ADMINISTRADOR
+  VENDEDOR
 }
 
 enum tipo_ajuste {

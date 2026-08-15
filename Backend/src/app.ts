@@ -7,6 +7,7 @@ import salidaRoutes from "./routes/salida.routes.js";
 import ajusteRoutes from "./routes/ajuste.routes.js";
 import ventaRoutes from "./routes/venta.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import usuarioRoutes from "./routes/usuario.routes.js";
 
 const app = express();
 
@@ -27,6 +28,8 @@ app.use("/api/ajustes", ajusteRoutes);
 app.use("/api/ventas", ventaRoutes);
 
 app.use("/api/auth", authRoutes);
+
+app.use("/api/usuarios", usuarioRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({
