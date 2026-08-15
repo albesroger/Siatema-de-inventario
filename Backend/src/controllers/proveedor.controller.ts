@@ -1,13 +1,28 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 
+import { AuthRequest } from "../middlewares/auth.middleware.js";
 import { ProveedorService } from "../services/proveedor.service.js";
 
 const proveedorService = new ProveedorService();
 
 export class ProveedorController {
-  async crear(req: Request, res: Response) {
+  // ========================================================
+  // CREAR PROVEEDOR
+  // ========================================================
+
+  async crear(req: AuthRequest, res: Response) {
     try {
-      const proveedor = await proveedorService.crear(req.body);
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Usuario no autenticado",
+        });
+      }
+
+      const proveedor = await proveedorService.crear(
+        req.body,
+        req.user.negocioId,
+      );
 
       return res.status(201).json({
         success: true,
@@ -24,18 +39,22 @@ export class ProveedorController {
     }
   }
 
-  async obtenerTodos(req: Request, res: Response) {
-    try {
-      const negocioId = req.query.negocioId;
+  // ========================================================
+  // OBTENER TODOS
+  // ========================================================
 
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+  async obtenerTodos(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
 
-      const proveedores = await proveedorService.obtenerTodos(negocioId);
+      const proveedores = await proveedorService.obtenerTodos(
+        req.user.negocioId,
+      );
 
       return res.json({
         success: true,
@@ -44,23 +63,28 @@ export class ProveedorController {
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Error al obtener los proveedores",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error al obtener los proveedores",
       });
     }
   }
 
-  async obtenerPorId(req: Request, res: Response) {
+  // ========================================================
+  // OBTENER POR ID
+  // ========================================================
+
+  async obtenerPorId(req: AuthRequest, res: Response) {
     try {
-      const negocioId = req.query.negocioId;
-
-      const id = req.params.id;
-
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
+
+      const { id } = req.params;
 
       if (typeof id !== "string") {
         return res.status(400).json({
@@ -69,7 +93,10 @@ export class ProveedorController {
         });
       }
 
-      const proveedor = await proveedorService.obtenerPorId(negocioId, id);
+      const proveedor = await proveedorService.obtenerPorId(
+        req.user.negocioId,
+        id,
+      );
 
       if (!proveedor) {
         return res.status(404).json({
@@ -85,23 +112,28 @@ export class ProveedorController {
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Error al obtener el proveedor",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error al obtener el proveedor",
       });
     }
   }
 
-  async actualizar(req: Request, res: Response) {
+  // ========================================================
+  // ACTUALIZAR
+  // ========================================================
+
+  async actualizar(req: AuthRequest, res: Response) {
     try {
-      const negocioId = req.query.negocioId;
-
-      const id = req.params.id;
-
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
+
+      const { id } = req.params;
 
       if (typeof id !== "string") {
         return res.status(400).json({
@@ -111,7 +143,7 @@ export class ProveedorController {
       }
 
       const proveedor = await proveedorService.actualizar(
-        negocioId,
+        req.user.negocioId,
         id,
         req.body,
       );
@@ -131,27 +163,29 @@ export class ProveedorController {
     }
   }
 
-  async eliminar(req: Request, res: Response) {
+  // ========================================================
+  // ELIMINAR
+  // ========================================================
+
+  async eliminar(req: AuthRequest, res: Response) {
     try {
-      const negocioId = req.query.negocioId;
-
-      const id = req.params.id;
-
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
+
+      const { id } = req.params;
 
       if (typeof id !== "string") {
         return res.status(400).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "El ID del proveedor es obligatorio",
         });
       }
 
-      const proveedor = await proveedorService.eliminar(negocioId, id);
+      const proveedor = await proveedorService.eliminar(req.user.negocioId, id);
 
       return res.json({
         success: true,

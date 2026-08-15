@@ -1,7 +1,6 @@
 import { prisma } from "../config/database.js";
 
 interface CrearProveedorDTO {
-  negocioId: string;
   nombre: string;
   telefono?: string;
   direccion?: string;
@@ -20,11 +19,18 @@ interface ActualizarProveedorDTO {
 }
 
 export class ProveedorService {
-  async crear(data: CrearProveedorDTO) {
-    // Comprobar que el negocio existe
+  // ========================================================
+  // CREAR PROVEEDOR
+  // ========================================================
+
+  async crear(data: CrearProveedorDTO, negocioId: string) {
+    // =========================================
+    // 1. VALIDAR NEGOCIO
+    // =========================================
+
     const negocio = await prisma.negocio.findUnique({
       where: {
-        id: data.negocioId,
+        id: negocioId,
       },
     });
 
@@ -32,18 +38,32 @@ export class ProveedorService {
       throw new Error("El negocio no existe");
     }
 
+    // =========================================
+    // 2. CREAR PROVEEDOR
+    // =========================================
+
     return prisma.proveedor.create({
       data: {
-        negocioId: data.negocioId,
+        negocioId,
+
         nombre: data.nombre,
+
         telefono: data.telefono,
+
         direccion: data.direccion,
+
         email: data.email,
+
         identificacion: data.identificacion,
+
         observaciones: data.observaciones,
       },
     });
   }
+
+  // ========================================================
+  // OBTENER TODOS
+  // ========================================================
 
   async obtenerTodos(negocioId: string) {
     return prisma.proveedor.findMany({
@@ -51,6 +71,7 @@ export class ProveedorService {
         negocioId,
         estado: "ACTIVO",
       },
+
       include: {
         _count: {
           select: {
@@ -58,11 +79,16 @@ export class ProveedorService {
           },
         },
       },
+
       orderBy: {
         nombre: "asc",
       },
     });
   }
+
+  // ========================================================
+  // OBTENER POR ID
+  // ========================================================
 
   async obtenerPorId(negocioId: string, id: string) {
     return prisma.proveedor.findFirst({
@@ -70,6 +96,7 @@ export class ProveedorService {
         id,
         negocioId,
       },
+
       include: {
         _count: {
           select: {
@@ -80,11 +107,19 @@ export class ProveedorService {
     });
   }
 
+  // ========================================================
+  // ACTUALIZAR
+  // ========================================================
+
   async actualizar(
     negocioId: string,
     id: string,
     data: ActualizarProveedorDTO,
   ) {
+    // =========================================
+    // 1. BUSCAR PROVEEDOR
+    // =========================================
+
     const proveedor = await prisma.proveedor.findFirst({
       where: {
         id,
@@ -96,22 +131,40 @@ export class ProveedorService {
       throw new Error("El proveedor no existe");
     }
 
+    // =========================================
+    // 2. ACTUALIZAR
+    // =========================================
+
     return prisma.proveedor.update({
       where: {
         id,
       },
+
       data: {
         nombre: data.nombre,
+
         telefono: data.telefono,
+
         direccion: data.direccion,
+
         email: data.email,
+
         identificacion: data.identificacion,
+
         observaciones: data.observaciones,
       },
     });
   }
 
+  // ========================================================
+  // ELIMINAR
+  // ========================================================
+
   async eliminar(negocioId: string, id: string) {
+    // =========================================
+    // 1. BUSCAR PROVEEDOR
+    // =========================================
+
     const proveedor = await prisma.proveedor.findFirst({
       where: {
         id,
@@ -123,13 +176,15 @@ export class ProveedorService {
       throw new Error("El proveedor no existe");
     }
 
-    // No borramos físicamente el proveedor.
-    // Lo dejamos inactivo para conservar
-    // el historial de operaciones.
+    // =========================================
+    // 2. ELIMINACIÓN LÓGICA
+    // =========================================
+
     return prisma.proveedor.update({
       where: {
         id,
       },
+
       data: {
         estado: "INACTIVO",
       },

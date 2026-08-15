@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 export const crearProveedorSchema = z.object({
-  negocioId: z.string().uuid("El negocioId no es válido"),
-
   nombre: z
     .string()
     .trim()
@@ -49,7 +47,12 @@ export const actualizarProveedorSchema = z.object({
 
   direccion: z.string().trim().max(255).optional(),
 
-  email: z.string().trim().email("El email no es válido").max(150).optional(),
+  email: z
+    .string()
+    .trim()
+    .email("El email no es válido")
+    .max(150)
+    .optional(),
 
   identificacion: z.string().trim().max(100).optional(),
 
