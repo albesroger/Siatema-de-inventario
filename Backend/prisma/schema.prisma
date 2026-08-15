@@ -87,17 +87,18 @@ model detalle_entrada {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 
 model detalle_salida {
-  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  salida_id         String            @db.Uuid
-  producto_id       String            @db.Uuid
-  cantidad          Decimal           @db.Decimal(14, 3)
-  observaciones     String?
-  created_at        DateTime          @default(now()) @db.Timestamp(6)
-  producto          producto          @relation(fields: [producto_id], references: [id], onUpdate: NoAction, map: "fk_detalle_salida_producto")
-  salida_inventario salida_inventario @relation(fields: [salida_id], references: [id], onUpdate: NoAction, map: "fk_detalle_salida_salida")
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  salidaId      String            @map("salida_id") @db.Uuid
+  productoId    String            @map("producto_id") @db.Uuid
+  cantidad      Decimal           @db.Decimal(14, 3)
+  observaciones String?
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
+  producto      producto          @relation(fields: [productoId], references: [id], onUpdate: NoAction, map: "fk_detalle_salida_producto")
+  salida        salida_inventario @relation(fields: [salidaId], references: [id], onUpdate: NoAction, map: "fk_detalle_salida_salida")
 
-  @@index([producto_id], map: "idx_detalle_salida_producto")
-  @@index([salida_id], map: "idx_detalle_salida_salida")
+  @@index([productoId], map: "idx_detalle_salida_producto")
+  @@index([salidaId], map: "idx_detalle_salida_salida")
+  @@map("detalle_salida")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -306,24 +307,25 @@ model proveedor {
 }
 
 model salida_inventario {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  negocio_id     String           @db.Uuid
-  usuario_id     String           @db.Uuid
-  dispositivo_id String           @db.Uuid
-  numero         BigInt
-  motivo         motivo_salida
-  observaciones  String?
-  estado         estado_documento @default(COMPLETADA)
-  created_at     DateTime         @default(now()) @db.Timestamp(6)
-  updated_at     DateTime         @default(now()) @db.Timestamp(6)
-  detalle_salida detalle_salida[]
-  dispositivo    dispositivo      @relation(fields: [dispositivo_id], references: [id], onUpdate: NoAction, map: "fk_salida_dispositivo")
-  negocio        negocio          @relation(fields: [negocio_id], references: [id], onUpdate: NoAction, map: "fk_salida_negocio")
-  usuario        usuario          @relation(fields: [usuario_id], references: [id], onUpdate: NoAction, map: "fk_salida_usuario")
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  negocioId     String           @map("negocio_id") @db.Uuid
+  usuarioId     String           @map("usuario_id") @db.Uuid
+  dispositivoId String           @map("dispositivo_id") @db.Uuid
+  numero        BigInt
+  motivo        motivo_salida
+  observaciones String?
+  estado        estado_documento @default(COMPLETADA)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime         @default(now()) @map("updated_at") @db.Timestamp(6)
+  detalles      detalle_salida[]
+  dispositivo   dispositivo      @relation(fields: [dispositivoId], references: [id], onUpdate: NoAction, map: "fk_salida_dispositivo")
+  negocio       negocio          @relation(fields: [negocioId], references: [id], onUpdate: NoAction, map: "fk_salida_negocio")
+  usuario       usuario          @relation(fields: [usuarioId], references: [id], onUpdate: NoAction, map: "fk_salida_usuario")
 
-  @@unique([negocio_id, numero], map: "uq_salida_negocio_numero")
-  @@index([created_at], map: "idx_salida_fecha")
-  @@index([negocio_id], map: "idx_salida_negocio")
+  @@unique([negocioId, numero], map: "uq_salida_negocio_numero")
+  @@index([createdAt], map: "idx_salida_fecha")
+  @@index([negocioId], map: "idx_salida_negocio")
+  @@map("salida_inventario")
 }
 
 model usuario {
