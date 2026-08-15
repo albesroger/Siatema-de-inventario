@@ -1,19 +1,38 @@
-import { Request, Response } from "express";
+import { Response } from "express";
+
+import { AuthRequest } from "../middlewares/auth.middleware.js";
 import { ProductoService } from "../services/producto.service.js";
+import { serializeBigInt } from "../utils/bigint.js";
 
 const productoService = new ProductoService();
 
 export class ProductoController {
-  async crear(req: Request, res: Response) {
-    try {
-      const producto = await productoService.crear(req.body);
+  // ========================================================
+  // CREAR PRODUCTO
+  // ========================================================
 
-      res.status(201).json({
+  async crear(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Usuario no autenticado",
+        });
+      }
+
+      const producto = await productoService.crear(
+        req.body,
+        req.user.negocioId,
+      );
+
+      return res.status(201).json({
         success: true,
-        data: producto,
+        data: serializeBigInt(producto),
       });
     } catch (error) {
-      res.status(400).json({
+      console.error("Error al crear producto:", error);
+
+      return res.status(400).json({
         success: false,
         message:
           error instanceof Error ? error.message : "Error al crear el producto",
@@ -21,46 +40,53 @@ export class ProductoController {
     }
   }
 
-  async obtenerTodos(req: Request, res: Response) {
-    try {
-      const negocioId = req.query.negocioId;
+  // ========================================================
+  // LISTAR PRODUCTOS
+  // ========================================================
 
-      // Validamos que sea realmente un string
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+  async obtenerTodos(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
 
-      const productos = await productoService.obtenerTodos(negocioId);
+      const productos = await productoService.obtenerTodos(req.user.negocioId);
 
-      return res.json({
+      return res.status(200).json({
         success: true,
-        data: productos,
+        data: serializeBigInt(productos),
       });
     } catch (error) {
+      console.error("Error al obtener productos:", error);
+
       return res.status(500).json({
         success: false,
-        message: "Error al obtener los productos",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error al obtener los productos",
       });
     }
   }
 
-  async obtenerPorId(req: Request, res: Response) {
-    try {
-      const negocioId = req.query.negocioId;
-      const id = req.params.id;
+  // ========================================================
+  // OBTENER PRODUCTO POR ID
+  // ========================================================
 
-      // Validar negocioId
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+  async obtenerPorId(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
 
-      // Validar id
+      const { id } = req.params;
+
       if (typeof id !== "string") {
         return res.status(400).json({
           success: false,
@@ -68,7 +94,10 @@ export class ProductoController {
         });
       }
 
-      const producto = await productoService.obtenerPorId(negocioId, id);
+      const producto = await productoService.obtenerPorId(
+        req.user.negocioId,
+        id,
+      );
 
       if (!producto) {
         return res.status(404).json({
@@ -77,29 +106,37 @@ export class ProductoController {
         });
       }
 
-      return res.json({
+      return res.status(200).json({
         success: true,
-        data: producto,
+        data: serializeBigInt(producto),
       });
     } catch (error) {
+      console.error("Error al obtener producto:", error);
+
       return res.status(500).json({
         success: false,
-        message: "Error al obtener el producto",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error al obtener el producto",
       });
     }
   }
 
-  async actualizar(req: Request, res: Response) {
-    try {
-      const negocioId = req.body.negocioId;
-      const id = req.params.id;
+  // ========================================================
+  // ACTUALIZAR PRODUCTO
+  // ========================================================
 
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+  async actualizar(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
+
+      const { id } = req.params;
 
       if (typeof id !== "string") {
         return res.status(400).json({
@@ -109,16 +146,18 @@ export class ProductoController {
       }
 
       const producto = await productoService.actualizar(
-        negocioId,
+        req.user.negocioId,
         id,
         req.body,
       );
 
-      return res.json({
+      return res.status(200).json({
         success: true,
-        data: producto,
+        data: serializeBigInt(producto),
       });
     } catch (error) {
+      console.error("Error al actualizar producto:", error);
+
       return res.status(400).json({
         success: false,
         message:
@@ -129,17 +168,20 @@ export class ProductoController {
     }
   }
 
-  async eliminar(req: Request, res: Response) {
-    try {
-      const negocioId = req.query.negocioId;
-      const id = req.params.id;
+  // ========================================================
+  // ELIMINAR PRODUCTO
+  // ========================================================
 
-      if (typeof negocioId !== "string") {
-        return res.status(400).json({
+  async eliminar(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
           success: false,
-          message: "El negocioId es obligatorio",
+          message: "Usuario no autenticado",
         });
       }
+
+      const { id } = req.params;
 
       if (typeof id !== "string") {
         return res.status(400).json({
@@ -148,13 +190,15 @@ export class ProductoController {
         });
       }
 
-      const producto = await productoService.eliminar(negocioId, id);
+      const producto = await productoService.eliminar(req.user.negocioId, id);
 
-      return res.json({
+      return res.status(200).json({
         success: true,
-        data: producto,
+        data: serializeBigInt(producto),
       });
     } catch (error) {
+      console.error("Error al eliminar producto:", error);
+
       return res.status(400).json({
         success: false,
         message:
