@@ -5,6 +5,7 @@ export interface CategoriaResumen {
   _count?: {
     productos: number;
   };
+  estado: string;
 }
 
 export interface ProductoCategoria {

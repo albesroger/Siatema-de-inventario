@@ -241,22 +241,22 @@ const categoriaNombre = (categoriaId: string) => {
     </div>
 
     <div class="grid gap-4 md:grid-cols-4">
-      <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
+      <div class="rounded-lg bg-white p-5 py-2 shadow-sm ring-1 ring-slate-200">
         <p class="text-lg text-slate-700 font-medium">Productos activos:</p>
         <p class="mt-2 text-2xl font-bold text-slate-800">{{ totalProductos }}</p>
       </div>
 
-      <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
+      <div class="rounded-lg bg-white p-5 py-2 shadow-sm ring-1 ring-slate-200">
         <p class="text-lg text-slate-700 font-medium">Categorías disponibles:</p>
         <p class="mt-2 text-2xl font-bold text-slate-800">{{ categorias.length }}</p>
       </div>
 
-      <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
+      <div class="rounded-lg bg-white p-5 py-2 shadow-sm ring-1 ring-slate-200">
         <p class="text-lg text-slate-700 font-medium">Stock bajo:</p>
         <p class="mt-2 text-2xl font-bold text-slate-800">{{ stockBajo }}</p>
       </div>
 
-      <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
+      <div class="rounded-lg bg-white p-5 py-2 shadow-sm ring-1 ring-slate-200">
         <p class="text-lg text-slate-700 font-medium">Productos inactivos:</p>
         <p class="mt-2 text-2xl font-bold text-slate-800">
           {{ totalProductosInactivos }}
@@ -375,7 +375,7 @@ const categoriaNombre = (categoriaId: string) => {
     <!-- Modal (teleport) -->
     <teleport to="body">
       <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/40" @click="closeModal"></div>
+        <div class="absolute inset-0 bg-black/50" @click="closeModal"></div>
 
         <div class="relative w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
           <div class="flex items-center justify-between">
