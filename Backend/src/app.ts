@@ -8,8 +8,17 @@ import ajusteRoutes from "./routes/ajuste.routes.js";
 import ventaRoutes from "./routes/venta.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import usuarioRoutes from "./routes/usuario.routes.js";
+import cors from "cors";
 
 const app = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:3001",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 app.use(express.json());
 

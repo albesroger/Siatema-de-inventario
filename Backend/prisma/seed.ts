@@ -13,7 +13,7 @@ const main = async () => {
   const usuarioExistente = await prisma.usuario.findFirst({
     where: {
       negocioId: negocio.id,
-      username: "admin2",
+      username: "admin",
     },
   });
 
