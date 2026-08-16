@@ -1,6 +1,7 @@
 <script setup lang="ts">
 definePageMeta({
   middleware: "guest",
+  layout: "auth",
 });
 
 const authStore = useAuthStore();
@@ -38,7 +39,7 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+  <div class="flex min-h-screen items-center justify-center px-4">
     <div class="w-full max-w-md">
       <div class="bg-white rounded-2xl shadow-xl p-8">
         <div class="text-center mb-8">

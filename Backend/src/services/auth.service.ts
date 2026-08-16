@@ -12,6 +12,15 @@ export const login = async (data: LoginInput) => {
     where: {
       username: data.username,
     },
+    include: {
+      negocio: {
+        select: {
+          id: true,
+          nombre: true,
+          nombre_comercial: true,
+        },
+      },
+    },
   });
 
   if (!usuario) {
@@ -74,6 +83,11 @@ export const login = async (data: LoginInput) => {
       username: usuario.username,
       rol: usuario.rol,
       negocioId: usuario.negocioId,
+      negocio: {
+        id: usuario.negocio.id,
+        nombre: usuario.negocio.nombre,
+        nombreComercial: usuario.negocio.nombre_comercial,
+      },
     },
   };
 };

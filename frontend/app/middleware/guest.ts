@@ -1,7 +1,14 @@
 export default defineNuxtRouteMiddleware(() => {
-  if (import.meta.server) return;
-
   const authStore = useAuthStore();
+  const tokenCookie = useCookie<string | null>("token");
+
+  if (import.meta.server) {
+    if (tokenCookie.value) {
+      return navigateTo("/");
+    }
+
+    return;
+  }
 
   authStore.cargarSesion();
 
