@@ -7,15 +7,17 @@ export const useAuthStore = defineStore("auth", () => {
 
   const usuario = ref<Usuario | null>(null);
 
+  const initialized = ref(false);
+
   const isAuthenticated = computed(() => !!token.value);
 
   const login = async (credentials: LoginRequest) => {
-    const config = useRuntimeConfig();
+    const { $api } = useNuxtApp();
 
-    const response = await $fetch<{
+    const response = await $api<{
       success: boolean;
       data: LoginResponse;
-    }>(`${config.public.apiBase}/auth/login`, {
+    }>("/auth/login", {
       method: "POST",
       body: credentials,
     });
@@ -23,22 +25,26 @@ export const useAuthStore = defineStore("auth", () => {
     token.value = response.data.token;
     usuario.value = response.data.usuario;
 
-    localStorage.setItem("token", response.data.token);
-    localStorage.setItem("usuario", JSON.stringify(response.data.usuario));
+    if (import.meta.client) {
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("usuario", JSON.stringify(response.data.usuario));
+    }
   };
 
   const logout = () => {
     token.value = null;
     usuario.value = null;
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario");
+    if (import.meta.client) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("usuario");
+    }
 
     navigateTo("/login");
   };
 
   const cargarSesion = () => {
-    if (!import.meta.client) return;
+    if (!import.meta.client || initialized.value) return;
 
     const storedToken = localStorage.getItem("token");
     const storedUsuario = localStorage.getItem("usuario");
@@ -50,12 +56,15 @@ export const useAuthStore = defineStore("auth", () => {
     if (storedUsuario) {
       usuario.value = JSON.parse(storedUsuario);
     }
+
+    initialized.value = true;
   };
 
   return {
     token,
     usuario,
     isAuthenticated,
+    initialized,
     login,
     logout,
     cargarSesion,
