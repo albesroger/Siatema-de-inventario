@@ -16,7 +16,9 @@ export const useAuthStore = defineStore("auth", () => {
       return "Mi negocio";
     }
 
-    return usuario.value.negocio.nombreComercial || usuario.value.negocio.nombre;
+    return (
+      usuario.value.negocio.nombreComercial || usuario.value.negocio.nombre
+    );
   });
 
   const login = async (credentials: LoginRequest) => {
