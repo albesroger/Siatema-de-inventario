@@ -108,7 +108,7 @@ export class ProductoService {
     return prisma.producto.findMany({
       where: {
         negocioId,
-        estado: "ACTIVO",
+        //estado: "ACTIVO",
       },
 
       include: {

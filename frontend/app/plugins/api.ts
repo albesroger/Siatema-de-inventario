@@ -1,18 +1,19 @@
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
   const authStore = useAuthStore();
+  const tokenCookie = useCookie<string | null>("token", {
+    sameSite: "lax",
+  });
 
   const api = $fetch.create({
     baseURL: config.public.apiBase,
     onRequest({ options }) {
-      if (!import.meta.client) return;
+      const token = authStore.token || tokenCookie.value;
 
-      authStore.cargarSesion();
-
-      if (!authStore.token) return;
+      if (!token) return;
 
       const headers = new Headers(options.headers as HeadersInit | undefined);
-      headers.set("Authorization", `Bearer ${authStore.token}`);
+      headers.set("Authorization", `Bearer ${token}`);
       options.headers = headers;
     },
   });
