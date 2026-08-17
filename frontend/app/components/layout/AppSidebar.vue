@@ -5,10 +5,10 @@ const navigation = [
   { label: "Dashboard", to: "/" },
   { label: "Ventas", to: "/ventas" },
   { label: "Productos", to: "/productos" },
-  { label: "Categorías", to: "/categorias" },
-  { label: "Proveedores", to: "/proveedores" },
   { label: "Entradas", to: "/entradas" },
   { label: "Salidas", to: "/salidas" },
+  { label: "Categorías", to: "/categorias" },
+  { label: "Proveedores", to: "/proveedores" },
   { label: "Movimientos", to: "/movimientos" },
   { label: "Ajustes de inventario", to: "/ajustes-inventario" },
 ];

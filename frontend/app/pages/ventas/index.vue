@@ -32,6 +32,40 @@ const numberValue = (value: string | number | null | undefined) => {
 };
 
 // ========================================================
+// FILTROS DEL HISTORIAL
+// ========================================================
+
+const filtroEstado = ref<"TODAS" | "COMPLETADA" | "ANULADA">("TODAS");
+const filtroFecha = ref<"HOY" | "DIA" | "TODAS">("HOY");
+const fechaSeleccionada = ref("");
+
+const ventasFiltradas = computed(() => {
+  let resultado = [...ventas.value];
+
+  if (filtroEstado.value !== "TODAS") {
+    resultado = resultado.filter((v) => v.estado === filtroEstado.value);
+  }
+
+  if (filtroFecha.value === "HOY") {
+    const hoy = new Date();
+    const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    const finHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + 1);
+    resultado = resultado.filter(
+      (v) => new Date(v.createdAt) >= inicioHoy && new Date(v.createdAt) < finHoy
+    );
+  } else if (filtroFecha.value === "DIA" && fechaSeleccionada.value) {
+    const inicioDia = new Date(fechaSeleccionada.value);
+    const finDia = new Date(fechaSeleccionada.value);
+    finDia.setDate(finDia.getDate() + 1);
+    resultado = resultado.filter(
+      (v) => new Date(v.createdAt) >= inicioDia && new Date(v.createdAt) < finDia
+    );
+  }
+
+  return resultado;
+});
+
+// ========================================================
 // DATOS PARA NUEVA VENTA (PUNTO DE VENTA)
 // ========================================================
 
@@ -52,9 +86,7 @@ const loadProductosParaVenta = async () => {
   const response = await $api<ApiResponse<ProductoParaVenta[]>>(
     "/productos?paraVenta=true"
   );
-  productosDisponibles.value = response.data.filter(
-    (p) => Number(p.stockActual) > 0
-  );
+  productosDisponibles.value = response.data.filter((p) => Number(p.stockActual) > 0);
 };
 
 const loadDispositivos = async () => {
@@ -93,9 +125,7 @@ const agregarAlCarrito = () => {
     return;
   }
 
-  const existente = carrito.value.find(
-    (item) => item.productoId === producto.id
-  );
+  const existente = carrito.value.find((item) => item.productoId === producto.id);
 
   if (existente) {
     const nuevaCantidad = Number(existente.cantidad) + cantidad;
@@ -133,9 +163,7 @@ const eliminarDelCarrito = (itemId: string) => {
 
 const actualizarCantidad = (itemId: string, cantidad: number) => {
   const item = carrito.value.find((i) => i.id === itemId);
-  const producto = productosDisponibles.value.find(
-    (p) => p.id === item?.productoId
-  );
+  const producto = productosDisponibles.value.find((p) => p.id === item?.productoId);
 
   if (!item || !producto) return;
 
@@ -224,10 +252,7 @@ const {
   data: ventasData,
   pending: ventasPending,
   refresh: refreshVentas,
-} = await useAsyncData(
-  `ventas-${authStore.usuario?.negocioId ?? "guest"}`,
-  loadVentas
-);
+} = await useAsyncData(`ventas-${authStore.usuario?.negocioId ?? "guest"}`, loadVentas);
 
 const ventas = computed(() => ventasData.value ?? []);
 
@@ -254,9 +279,7 @@ const anularVenta = async (venta: Venta) => {
       showModal.value = false;
     }
   } catch (error: any) {
-    alert(
-      error?.data?.message || error?.message || "No se pudo anular la venta"
-    );
+    alert(error?.data?.message || error?.message || "No se pudo anular la venta");
   }
 };
 
@@ -342,11 +365,96 @@ onMounted(async () => {
             </p>
           </div>
 
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex rounded-lg border border-slate-200 overflow-hidden">
+              <button
+                type="button"
+                :class="[
+                  'px-3 py-1.5 text-sm font-medium transition',
+                  filtroEstado === 'TODAS'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-50',
+                ]"
+                @click="filtroEstado = 'TODAS'"
+              >
+                Todas
+              </button>
+              <button
+                type="button"
+                :class="[
+                  'px-3 py-1.5 text-sm font-medium transition',
+                  filtroEstado === 'COMPLETADA'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-50',
+                ]"
+                @click="filtroEstado = 'COMPLETADA'"
+              >
+                Completadas
+              </button>
+              <button
+                type="button"
+                :class="[
+                  'px-3 py-1.5 text-sm font-medium transition',
+                  filtroEstado === 'ANULADA'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-50',
+                ]"
+                @click="filtroEstado = 'ANULADA'"
+              >
+                Anuladas
+              </button>
+            </div>
+
+            <div class="flex rounded-lg border border-slate-200 overflow-hidden">
+              <button
+                type="button"
+                :class="[
+                  'px-3 py-1.5 text-sm font-medium transition',
+                  filtroFecha === 'HOY'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-50',
+                ]"
+                @click="filtroFecha = 'HOY'"
+              >
+                Hoy
+              </button>
+              <button
+                type="button"
+                :class="[
+                  'px-3 py-1.5 text-sm font-medium transition',
+                  filtroFecha === 'DIA'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-50',
+                ]"
+                @click="filtroFecha = 'DIA'"
+              >
+                Día
+              </button>
+              <button
+                type="button"
+                :class="[
+                  'px-3 py-1.5 text-sm font-medium transition',
+                  filtroFecha === 'TODAS'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-50',
+                ]"
+                @click="filtroFecha = 'TODAS'"
+              >
+                Todas
+              </button>
+            </div>
+
+            <input
+              v-if="filtroFecha === 'DIA'"
+              v-model="fechaSeleccionada"
+              type="date"
+              class="rounded-xl border border-slate-300 px-3 py-1.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
           <div class="text-sm text-slate-500">
             {{
-              ventasPending
-                ? "Cargando ventas..."
-                : `${ventas.length} registros`
+              ventasPending ? "Cargando ventas..." : `${ventasFiltradas.length} registros`
             }}
           </div>
         </div>
@@ -366,13 +474,13 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 bg-white">
-              <tr v-if="!ventasPending && ventas.length === 0">
+              <tr v-if="!ventasPending && ventasFiltradas.length === 0">
                 <td colspan="6" class="px-4 py-10 text-center text-sm text-slate-500">
                   No hay ventas registradas todavía.
                 </td>
               </tr>
 
-              <tr v-for="venta in ventas" :key="venta.id" class="align-top">
+              <tr v-for="venta in ventasFiltradas" :key="venta.id" class="align-top">
                 <td class="px-4 py-4">
                   <p class="font-semibold text-slate-800">#{{ venta.numero }}</p>
                 </td>
@@ -436,7 +544,9 @@ onMounted(async () => {
       >
         <div class="absolute inset-0 bg-black/50" @click="showModal = false"></div>
 
-        <div class="relative w-full max-w-4xl rounded-lg bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto">
+        <div
+          class="relative w-full max-w-4xl rounded-lg bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto"
+        >
           <div class="flex items-center justify-between">
             <h3 class="text-xl font-semibold text-green-700">Nueva venta</h3>
             <button
@@ -682,16 +792,14 @@ onMounted(async () => {
       >
         <div class="absolute inset-0 bg-black/50" @click="showModal = false"></div>
 
-        <div class="relative w-full max-w-3xl rounded-lg bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto">
+        <div
+          class="relative w-full max-w-3xl rounded-lg bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto"
+        >
           <div class="flex items-center justify-between">
             <h3 class="text-xl font-semibold text-green-700">
               Detalle de venta #{{ ventas.find((v) => v.id === editingId)?.numero }}
             </h3>
-            <button
-              type="button"
-              class="text-slate-500"
-              @click="showModal = false"
-            >
+            <button type="button" class="text-slate-500" @click="showModal = false">
               ✕
             </button>
           </div>

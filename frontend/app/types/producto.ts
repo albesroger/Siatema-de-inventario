@@ -133,3 +133,98 @@ export interface Dispositivo {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface DetalleEntrada {
+  id: string;
+  entradaId: string;
+  productoId: string;
+  cantidad: string | number;
+  costoUnitario: string | number;
+  descuento: string | number;
+  subtotal: string | number;
+  producto: {
+    id: string;
+    codigo: string;
+    nombre: string;
+    unidadMedida: string;
+  };
+}
+
+export interface Entrada {
+  id: string;
+  negocioId: string;
+  proveedorId: string | null;
+  usuarioId: string;
+  dispositivoId: string;
+  numero: string | number | bigint;
+  numeroDocumento: string | null;
+  subtotal: string | number;
+  descuento: string | number;
+  total: string | number;
+  observaciones: string | null;
+  estado: string;
+  createdAt: string;
+  updatedAt: string;
+  proveedor?: {
+    id: string;
+    nombre: string;
+    telefono: string | null;
+    email: string | null;
+  };
+  usuario?: {
+    id: string;
+    nombre: string;
+    username: string;
+  };
+  dispositivo?: {
+    id: string;
+    nombre: string;
+    identificador: string;
+  };
+  detalles: DetalleEntrada[];
+}
+
+export interface DetalleSalida {
+  id: string;
+  salidaId: string;
+  productoId: string;
+  cantidad: string | number;
+  observaciones: string | null;
+  producto: {
+    id: string;
+    codigo: string;
+    nombre: string;
+    unidadMedida: string;
+  };
+}
+
+export interface Salida {
+  id: string;
+  negocioId: string;
+  usuarioId: string;
+  dispositivoId: string;
+  numero: string | number | bigint;
+  motivo:
+    | "PRODUCTO_DANADO"
+    | "PRODUCTO_VENCIDO"
+    | "CONSUMO_INTERNO"
+    | "PERDIDA"
+    | "ROBO"
+    | "MUESTRA"
+    | "OTRO";
+  observaciones: string | null;
+  estado: string;
+  createdAt: string;
+  updatedAt: string;
+  usuario?: {
+    id: string;
+    nombre: string;
+    username: string;
+  };
+  dispositivo?: {
+    id: string;
+    nombre: string;
+    identificador: string;
+  };
+  detalles: DetalleSalida[];
+}

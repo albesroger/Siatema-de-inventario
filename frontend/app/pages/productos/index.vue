@@ -343,7 +343,16 @@ const categoriaNombre = (categoriaId: string) => {
                 </td>
 
                 <td class="px-4 py-4 text-sm text-slate-600 font-medium">
-                  <p>{{ producto.estado }}</p>
+                  <span
+                    :class="[
+                      'inline-flex rounded-full px-2 py-1 text-xs font-medium',
+                      producto.estado === 'ACTIVO'
+                        ? 'bg-green-100 text-green-700 w-20 justify-center'
+                        : 'bg-red-100 text-red-700 w-20 justify-center',
+                    ]"
+                  >
+                    {{ producto.estado }}
+                  </span>
                 </td>
 
                 <td class="px-4 py-4">

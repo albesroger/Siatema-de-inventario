@@ -213,7 +213,16 @@ const eliminarCategoria = async (categoria: CategoriaResumen) => {
                 </td>
 
                 <td class="px-4 py-4 text-md text-slate-600 font-medium">
-                  {{ categoria.estado }}
+                  <span
+                    :class="[
+                      'inline-flex rounded-full px-2 py-1 text-xs font-medium',
+                      categoria.estado === 'ACTIVO'
+                        ? 'bg-green-100 text-green-700 w-20 justify-center'
+                        : 'bg-red-100 text-red-700 w-20 justify-center',
+                    ]"
+                  >
+                    {{ categoria.estado }}
+                  </span>
                 </td>
 
                 <td class="px-4 py-4">

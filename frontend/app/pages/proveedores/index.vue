@@ -137,16 +137,12 @@ const totalProveedores = computed(() => proveedores.value.length);
 
 const proveedoresConEntradas = computed(
   () =>
-    proveedores.value.filter(
-      (p) => p._count?.entradas && p._count.entradas > 0
-    ).length
+    proveedores.value.filter((p) => p._count?.entradas && p._count.entradas > 0).length
 );
 
 const proveedoresSinEntradas = computed(
   () =>
-    proveedores.value.filter(
-      (p) => !p._count?.entradas || p._count.entradas === 0
-    ).length
+    proveedores.value.filter((p) => !p._count?.entradas || p._count.entradas === 0).length
 );
 </script>
 
@@ -256,7 +252,16 @@ const proveedoresSinEntradas = computed(
                 </td>
 
                 <td class="px-4 py-4 text-sm text-slate-600 font-medium">
-                  <p>{{ proveedor.estado }}</p>
+                  <span
+                    :class="[
+                      'inline-flex rounded-full px-2 py-1 text-xs font-medium',
+                      proveedor.estado === 'ACTIVO'
+                        ? 'bg-green-100 text-green-700 w-20 justify-center'
+                        : 'bg-red-100 text-red-700 w-20 justify-center',
+                    ]"
+                  >
+                    {{ proveedor.estado }}
+                  </span>
                 </td>
 
                 <td class="px-4 py-4">
