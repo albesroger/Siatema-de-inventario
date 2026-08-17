@@ -227,6 +227,13 @@ const stockBajo = computed(
     ).length
 );
 
+const filtroCategoria = ref<string>("TODAS");
+
+const productosFiltrados = computed(() => {
+  if (filtroCategoria.value === "TODAS") return productos.value;
+  return productos.value.filter((p) => p.categoriaId === filtroCategoria.value);
+});
+
 const categoriaNombre = (categoriaId: string) => {
   return (
     categorias.value.find((categoria) => categoria.id === categoriaId)?.nombre ||
@@ -298,9 +305,42 @@ const categoriaNombre = (categoriaId: string) => {
             </p>
           </div>
 
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex rounded-lg border border-slate-200 overflow-hidden">
+              <button
+                type="button"
+                :class="[
+                  'px-3 py-1.5 text-sm font-medium transition',
+                  filtroCategoria === 'TODAS'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-50',
+                ]"
+                @click="filtroCategoria = 'TODAS'"
+              >
+                Todas
+              </button>
+              <button
+                v-for="categoria in categorias"
+                :key="categoria.id"
+                type="button"
+                :class="[
+                  'px-3 py-1.5 text-sm font-medium transition',
+                  filtroCategoria === categoria.id
+                    ? 'bg-green-600 text-white'
+                    : 'bg-white text-slate-600 hover:bg-slate-50',
+                ]"
+                @click="filtroCategoria = categoria.id"
+              >
+                {{ categoria.nombre }}
+              </button>
+            </div>
+          </div>
+
           <div class="text-sm text-slate-500">
             {{
-              productosPending ? "Cargando productos..." : `${productos.length} registros`
+              productosPending
+                ? "Cargando productos..."
+                : `${productosFiltrados.length} registros`
             }}
           </div>
         </div>
@@ -321,13 +361,17 @@ const categoriaNombre = (categoriaId: string) => {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 bg-white">
-              <tr v-if="!productosPending && productos.length === 0">
+              <tr v-if="!productosPending && productosFiltrados.length === 0">
                 <td colspan="7" class="px-4 py-10 text-center text-sm text-slate-500">
                   No hay productos registrados todavía.
                 </td>
               </tr>
 
-              <tr v-for="producto in productos" :key="producto.id" class="align-top">
+              <tr
+                v-for="producto in productosFiltrados"
+                :key="producto.id"
+                class="align-top"
+              >
                 <td class="px-4 py-2">
                   <p class="font-semibold text-slate-800">{{ producto.nombre }}</p>
                 </td>
