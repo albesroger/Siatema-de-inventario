@@ -107,17 +107,23 @@ const salidasAnuladas = computed(
     </div>
 
     <div class="grid gap-4 md:grid-cols-3">
-      <div class="rounded-lg bg-white p-5 py-2 shadow-sm ring-1 ring-slate-200">
+      <div
+        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+      >
         <p class="text-lg text-slate-700 font-medium">Total salidas:</p>
         <p class="mt-2 text-2xl font-bold text-slate-800">{{ totalSalidas }}</p>
       </div>
 
-      <div class="rounded-lg bg-white p-5 py-2 shadow-sm ring-1 ring-slate-200">
+      <div
+        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+      >
         <p class="text-lg text-slate-700 font-medium">Completadas:</p>
         <p class="mt-2 text-2xl font-bold text-green-600">{{ salidasCompletadas }}</p>
       </div>
 
-      <div class="rounded-lg bg-white p-5 py-2 shadow-sm ring-1 ring-slate-200">
+      <div
+        class="rounded-lg bg-white border border-red-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+      >
         <p class="text-lg text-slate-700 font-medium">Anuladas:</p>
         <p class="mt-2 text-2xl font-bold text-red-600">{{ salidasAnuladas }}</p>
       </div>
@@ -200,7 +206,11 @@ const salidasAnuladas = computed(
                 </td>
               </tr>
 
-              <tr v-for="salida in salidasFiltradas" :key="salida.id" class="align-center">
+              <tr
+                v-for="salida in salidasFiltradas"
+                :key="salida.id"
+                class="align-center"
+              >
                 <td class="px-4 py-2">
                   <p class="font-medium text-slate-800 text-sm">
                     #{{ salida.numero.toString() }}

@@ -41,16 +41,16 @@ const handleLogin = async () => {
 <template>
   <div class="flex min-h-screen items-center justify-center px-4">
     <div class="w-full max-w-md">
-      <div class="bg-white rounded-2xl shadow-xl p-8">
+      <div class="bg-white rounded-2xl shadow-2xl shadow-green-300 p-8">
         <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-slate-900">Iniciar sesión</h1>
+          <h1 class="text-3xl font-bold text-green-600">Iniciar sesión</h1>
 
-          <p class="mt-2 text-slate-500">Sistema de gestión de inventario</p>
+          <p class="mt-2 text-green-700">Sistema de gestión de inventario</p>
         </div>
 
         <form class="space-y-5" @submit.prevent="handleLogin">
           <div>
-            <label for="username" class="block text-sm font-medium text-slate-700 mb-2">
+            <label for="username" class="block text-md font-medium text-slate-700 mb-2">
               Usuario
             </label>
 
@@ -60,12 +60,12 @@ const handleLogin = async () => {
               type="text"
               autocomplete="username"
               placeholder="Introduce tu usuario"
-              class="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              class="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
           <div>
-            <label for="password" class="block text-sm font-medium text-slate-700 mb-2">
+            <label for="password" class="block text-md font-medium text-slate-700 mb-2">
               Contraseña
             </label>
 
@@ -75,7 +75,7 @@ const handleLogin = async () => {
               type="password"
               autocomplete="current-password"
               placeholder="Introduce tu contraseña"
-              class="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              class="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
@@ -89,7 +89,7 @@ const handleLogin = async () => {
           <button
             type="submit"
             :disabled="loading"
-            class="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            class="w-full rounded-lg bg-green-600 px-4 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {{ loading ? "Iniciando sesión..." : "Iniciar sesión" }}
           </button>

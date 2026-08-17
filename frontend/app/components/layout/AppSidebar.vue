@@ -9,8 +9,8 @@ const navigation = [
   { label: "Salidas", to: "/salidas" },
   { label: "Categorías", to: "/categorias" },
   { label: "Proveedores", to: "/proveedores" },
-  { label: "Movimientos", to: "/movimientos" },
   { label: "Ajustes de inventario", to: "/ajustes-inventario" },
+  { label: "Movimientos", to: "/movimientos" },
 ];
 
 const route = useRoute();

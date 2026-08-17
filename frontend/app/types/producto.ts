@@ -228,3 +228,82 @@ export interface Salida {
   };
   detalles: DetalleSalida[];
 }
+
+export interface Movimiento {
+  id: string;
+  negocioId: string;
+  productoId: string;
+  usuarioId: string;
+  dispositivoId: string;
+  tipo:
+    | "INVENTARIO_INICIAL"
+    | "ENTRADA"
+    | "VENTA"
+    | "SALIDA"
+    | "AJUSTE_POSITIVO"
+    | "AJUSTE_NEGATIVO";
+  cantidad: string | number;
+  stockAnterior: string | number;
+  stockPosterior: string | number;
+  referenciaTipo: "VENTA" | "ENTRADA" | "SALIDA" | "AJUSTE";
+  referenciaId: string;
+  motivo: string | null;
+  createdAt: string;
+  producto: {
+    id: string;
+    codigo: string;
+    nombre: string;
+    unidadMedida: string;
+  };
+  usuario: {
+    id: string;
+    nombre: string;
+    username: string;
+  };
+  dispositivo: {
+    id: string;
+    nombre: string;
+    identificador: string;
+  };
+}
+
+export interface DetalleAjuste {
+  id: string;
+  ajusteId: string;
+  productoId: string;
+  cantidad: string | number;
+  stockAnterior: string | number;
+  stockNuevo: string | number;
+  observaciones: string | null;
+  producto: {
+    id: string;
+    codigo: string;
+    nombre: string;
+    unidadMedida: string;
+  };
+}
+
+export interface Ajuste {
+  id: string;
+  negocioId: string;
+  usuarioId: string;
+  dispositivoId: string;
+  numero: string | number | bigint;
+  tipo: "POSITIVO" | "NEGATIVO";
+  motivo: "DIFERENCIA_CONTEO" | "ERROR_REGISTRO" | "CORRECCION" | "OTRO";
+  observaciones: string | null;
+  estado: string;
+  createdAt: string;
+  updatedAt: string;
+  detalles: DetalleAjuste[];
+  usuario: {
+    id: string;
+    nombre: string;
+    username: string;
+  };
+  dispositivo: {
+    id: string;
+    nombre: string;
+    identificador: string;
+  };
+}

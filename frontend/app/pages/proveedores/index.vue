@@ -162,17 +162,23 @@ const proveedoresSinEntradas = computed(
     </div>
 
     <div class="grid gap-4 md:grid-cols-3">
-      <div class="rounded-lg bg-white p-5 py-2 shadow-sm ring-1 ring-slate-200">
+      <div
+        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+      >
         <p class="text-lg text-slate-700 font-medium">Proveedores registrados:</p>
         <p class="mt-2 text-2xl font-bold text-slate-800">{{ totalProveedores }}</p>
       </div>
 
-      <div class="rounded-lg bg-white p-5 py-2 shadow-sm ring-1 ring-slate-200">
+      <div
+        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+      >
         <p class="text-lg text-slate-700 font-medium">Con entradas:</p>
         <p class="mt-2 text-2xl font-bold text-slate-800">{{ proveedoresConEntradas }}</p>
       </div>
 
-      <div class="rounded-lg bg-white p-5 py-2 shadow-sm ring-1 ring-slate-200">
+      <div
+        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+      >
         <p class="text-lg text-slate-700 font-medium">Sin entradas:</p>
         <p class="mt-2 text-2xl font-bold text-slate-800">{{ proveedoresSinEntradas }}</p>
       </div>
