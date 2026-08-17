@@ -315,29 +315,29 @@ const categoriaNombre = (categoriaId: string) => {
               </tr>
 
               <tr v-for="producto in productos" :key="producto.id" class="align-top">
-                <td class="px-4 py-4">
+                <td class="px-4 py-2">
                   <p class="font-semibold text-slate-800">{{ producto.nombre }}</p>
                 </td>
 
-                <td class="px-4 py-4">
+                <td class="px-4 py-2">
                   <p class="text-sm text-slate-600 font-medium">{{ producto.codigo }}</p>
                   <p class="text-xs text-slate-400">{{ producto.unidadMedida }}</p>
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-700 font-medium">
+                <td class="px-4 py-2 text-sm text-slate-700 font-medium">
                   {{
                     producto.categoria?.nombre || categoriaNombre(producto.categoriaId)
                   }}
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   <p class="text-slate-700 font-medium">
                     Actual: {{ producto.stockActual }}
                   </p>
                   <p>Mín: {{ producto.stockMinimo }}</p>
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   <p>Compra: {{ money.format(Number(producto.precioCompra)) }}</p>
                   <p>Venta: {{ money.format(Number(producto.precioVenta)) }}</p>
                 </td>
@@ -355,7 +355,7 @@ const categoriaNombre = (categoriaId: string) => {
                   </span>
                 </td>
 
-                <td class="px-4 py-4">
+                <td class="px-4 py-2">
                   <div class="flex flex-wrap gap-2">
                     <button
                       type="button"

@@ -482,7 +482,7 @@ onMounted(async () => {
 
               <tr v-for="venta in ventasFiltradas" :key="venta.id" class="align-top">
                 <td class="px-4 py-4">
-                  <p class="font-semibold text-slate-800">#{{ venta.numero }}</p>
+                  <p class="text-sm font-medium text-slate-800">#{{ venta.numero }}</p>
                 </td>
 
                 <td class="px-4 py-4 text-sm text-slate-600">
@@ -506,10 +506,19 @@ onMounted(async () => {
                 </td>
 
                 <td class="px-4 py-4 text-sm text-slate-600 font-medium">
-                  <p>{{ venta.estado }}</p>
+                  <span
+                    :class="[
+                      'inline-flex rounded-full px-2 py-1 text-xs font-medium',
+                      venta.estado === 'COMPLETADA'
+                        ? 'bg-green-100 text-green-700 justify-center'
+                        : 'bg-red-100 text-red-700 justify-center w-24',
+                    ]"
+                  >
+                    {{ venta.estado }} </span
+                  >
                 </td>
 
-                <td class="px-4 py-4">
+                <td class="px-4 py-2">
                   <div class="flex flex-wrap gap-2">
                     <button
                       type="button"
