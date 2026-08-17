@@ -359,7 +359,7 @@ const categoriaNombre = (categoriaId: string) => {
                   <div class="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      class="rounded-lg border border-blue-200 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+                      class="rounded-lg border border-blue-200 px-3 py-1 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
                       @click="openEdit(producto)"
                     >
                       Editar
@@ -367,7 +367,7 @@ const categoriaNombre = (categoriaId: string) => {
 
                     <button
                       type="button"
-                      class="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                      class="rounded-lg border border-red-200 px-3 py-1 text-sm font-medium text-red-700 transition hover:bg-red-50"
                       @click="eliminarProducto(producto)"
                     >
                       Eliminar

@@ -200,26 +200,26 @@ const salidasAnuladas = computed(
                 </td>
               </tr>
 
-              <tr v-for="salida in salidasFiltradas" :key="salida.id" class="align-top">
-                <td class="px-4 py-4">
-                  <p class="font-semibold text-slate-800">
+              <tr v-for="salida in salidasFiltradas" :key="salida.id" class="align-center">
+                <td class="px-4 py-2">
+                  <p class="font-medium text-slate-800 text-sm">
                     #{{ salida.numero.toString() }}
                   </p>
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   {{ motivoLabels[salida.motivo] || salida.motivo }}
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   {{ salida.detalles?.length ?? 0 }} items
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   {{ salida.usuario?.nombre || "—" }}
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600 font-medium">
+                <td class="px-4 py-2 text-sm text-slate-600 font-medium">
                   <span
                     :class="[
                       'inline-flex rounded-full px-2 py-1 text-xs font-medium',
@@ -232,7 +232,7 @@ const salidasAnuladas = computed(
                   </span>
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   {{ new Date(salida.createdAt).toLocaleDateString("es-CU") }}
                 </td>
 
@@ -240,7 +240,7 @@ const salidasAnuladas = computed(
                   <div class="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      class="rounded-lg border border-blue-200 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+                      class="rounded-lg border border-blue-200 px-3 py-1 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
                       @click="verDetalle(salida)"
                     >
                       Detalles
@@ -249,7 +249,7 @@ const salidasAnuladas = computed(
                     <button
                       v-if="salida.estado === 'COMPLETADA'"
                       type="button"
-                      class="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                      class="rounded-lg border border-red-200 px-3 py-1 text-sm font-medium text-red-700 transition hover:bg-red-50"
                       @click="anularSalida(salida)"
                     >
                       Anular

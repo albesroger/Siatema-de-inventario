@@ -480,12 +480,12 @@ onMounted(async () => {
                 </td>
               </tr>
 
-              <tr v-for="venta in ventasFiltradas" :key="venta.id" class="align-top">
-                <td class="px-4 py-4">
+              <tr v-for="venta in ventasFiltradas" :key="venta.id" class="align-center">
+                <td class="px-4 py-2">
                   <p class="text-sm font-medium text-slate-800">#{{ venta.numero }}</p>
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   {{
                     new Date(venta.createdAt).toLocaleString("es-ES", {
                       day: "2-digit",
@@ -497,15 +497,15 @@ onMounted(async () => {
                   }}
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600 font-medium">
+                <td class="px-4 py-2 text-sm text-slate-600 font-medium">
                   {{ money.format(Number(venta.total)) }}
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   {{ venta.metodoPago }}
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600 font-medium">
+                <td class="px-4 py-2 text-sm text-slate-600 font-medium">
                   <span
                     :class="[
                       'inline-flex rounded-full px-2 py-1 text-xs font-medium',
@@ -514,15 +514,15 @@ onMounted(async () => {
                         : 'bg-red-100 text-red-700 justify-center w-24',
                     ]"
                   >
-                    {{ venta.estado }} </span
-                  >
+                    {{ venta.estado }}
+                  </span>
                 </td>
 
                 <td class="px-4 py-2">
                   <div class="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      class="rounded-lg border border-blue-200 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+                      class="rounded-lg border border-blue-200 px-3 py-1 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
                       @click="verDetalle(venta)"
                     >
                       Detalle
@@ -531,7 +531,7 @@ onMounted(async () => {
                     <button
                       v-if="venta.estado === 'COMPLETADA'"
                       type="button"
-                      class="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                      class="rounded-lg border border-red-200 px-3 py-1 text-sm font-medium text-red-700 transition hover:bg-red-50"
                       @click="anularVenta(venta)"
                     >
                       Anular

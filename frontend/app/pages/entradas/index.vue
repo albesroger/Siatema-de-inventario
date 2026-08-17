@@ -204,31 +204,31 @@ const entradasAnuladas = computed(
               <tr
                 v-for="entrada in entradasFiltradas"
                 :key="entrada.id"
-                class="align-top"
+                class="align-center"
               >
-                <td class="px-4 py-4">
-                  <p class="font-semibold text-slate-800">
+                <td class="px-4 py-2">
+                  <p class="font-medium text-slate-800 text-sm">
                     #{{ entrada.numero.toString() }}
                   </p>
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   {{ entrada.proveedor?.nombre || "—" }}
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   {{ entrada.numeroDocumento || "—" }}
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600 font-medium">
+                <td class="px-4 py-2 text-sm text-slate-600 font-medium">
                   ${{ Number(entrada.total).toFixed(2) }}
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   {{ entrada.detalles?.length ?? 0 }} items
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600 font-medium">
+                <td class="px-4 py-2 text-sm text-slate-600 font-medium">
                   <span
                     :class="[
                       'inline-flex rounded-full px-2 py-1 text-xs font-medium',
@@ -241,7 +241,7 @@ const entradasAnuladas = computed(
                   </span>
                 </td>
 
-                <td class="px-4 py-4 text-sm text-slate-600">
+                <td class="px-4 py-2 text-sm text-slate-600">
                   {{ new Date(entrada.createdAt).toLocaleDateString("es-CU") }}
                 </td>
 
@@ -249,7 +249,7 @@ const entradasAnuladas = computed(
                   <div class="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      class="rounded-lg border border-blue-200 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+                      class="rounded-lg border border-blue-200 px-3 py-1 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
                       @click="verDetalle(entrada)"
                     >
                       Detalles
@@ -258,7 +258,7 @@ const entradasAnuladas = computed(
                     <button
                       v-if="entrada.estado === 'COMPLETADA'"
                       type="button"
-                      class="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                      class="rounded-lg border border-red-200 px-3 py-1 text-sm font-medium text-red-700 transition hover:bg-red-50"
                       @click="anularEntrada(entrada)"
                     >
                       Anular
