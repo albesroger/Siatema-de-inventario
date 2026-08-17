@@ -309,7 +309,7 @@ const categoriaNombre = (categoriaId: string) => {
             </thead>
             <tbody class="divide-y divide-slate-100 bg-white">
               <tr v-if="!productosPending && productos.length === 0">
-                <td colspan="5" class="px-4 py-10 text-center text-sm text-slate-500">
+                <td colspan="7" class="px-4 py-10 text-center text-sm text-slate-500">
                   No hay productos registrados todavía.
                 </td>
               </tr>

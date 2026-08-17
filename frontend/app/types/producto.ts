@@ -13,6 +13,23 @@ export interface ProductoCategoria {
   nombre: string;
 }
 
+export interface Proveedor {
+  id: string;
+  negocioId: string;
+  nombre: string;
+  telefono: string | null;
+  direccion: string | null;
+  email: string | null;
+  identificacion: string | null;
+  observaciones: string | null;
+  estado: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    entradas: number;
+  };
+}
+
 export interface Producto {
   id: string;
   negocioId: string;

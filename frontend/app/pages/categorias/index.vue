@@ -213,7 +213,7 @@ const eliminarCategoria = async (categoria: CategoriaResumen) => {
                 </td>
 
                 <td class="px-4 py-4 text-md text-slate-600 font-medium">
-                  {{ categoria.estado ? "Activo" : "Inactivo" }}
+                  {{ categoria.estado }}
                 </td>
 
                 <td class="px-4 py-4">
