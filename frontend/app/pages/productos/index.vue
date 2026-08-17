@@ -154,6 +154,11 @@ const submitProducto = async () => {
     return;
   }
 
+  if (/^\d+$/.test(form.nombre.trim())) {
+    formMessage.value = "El nombre del producto no puede ser solo números.";
+    return;
+  }
+
   const payload = {
     categoriaId: form.categoriaId,
     codigo: form.codigo.trim(),

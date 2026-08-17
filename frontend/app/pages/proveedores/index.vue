@@ -82,6 +82,11 @@ const submitProveedor = async () => {
     return;
   }
 
+  if (/^\d+$/.test(form.nombre.trim())) {
+    formMessage.value = "El nombre del proveedor no puede ser solo números.";
+    return;
+  }
+
   const payload = {
     nombre: form.nombre.trim(),
     identificacion: form.identificacion.trim() || undefined,
@@ -226,7 +231,11 @@ const proveedoresSinEntradas = computed(
                 </td>
               </tr>
 
-              <tr v-for="proveedor in proveedores" :key="proveedor.id" class="align-center">
+              <tr
+                v-for="proveedor in proveedores"
+                :key="proveedor.id"
+                class="align-center"
+              >
                 <td class="px-4 py-2">
                   <p class="font-medium text-slate-800">{{ proveedor.nombre }}</p>
                 </td>

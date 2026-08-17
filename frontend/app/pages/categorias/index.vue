@@ -70,6 +70,11 @@ const submitCategoria = async () => {
     return;
   }
 
+  if (/^\d+$/.test(form.nombre.trim())) {
+    formMessage.value = "El nombre de la categoría no puede ser solo números.";
+    return;
+  }
+
   const payload = {
     nombre: form.nombre.trim(),
     descripcion: form.descripcion.trim() || undefined,
@@ -199,7 +204,11 @@ const eliminarCategoria = async (categoria: CategoriaResumen) => {
                 </td>
               </tr>
 
-              <tr v-for="categoria in categorias" :key="categoria.id" class="align-center">
+              <tr
+                v-for="categoria in categorias"
+                :key="categoria.id"
+                class="align-center"
+              >
                 <td class="px-4 py-2">
                   <p class="font-medium text-slate-800">{{ categoria.nombre }}</p>
                 </td>
