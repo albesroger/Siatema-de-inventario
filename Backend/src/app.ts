@@ -2,6 +2,7 @@ import express from "express";
 import productoRoutes from "./routes/producto.routes.js";
 import categoriaRoutes from "./routes/categoria.routes.js";
 import proveedorRoutes from "./routes/proveedor.routes.js";
+import dispositivoRoutes from "./routes/dispositivo.routes.js";
 import entradaRoutes from "./routes/entrada.routes.js";
 import salidaRoutes from "./routes/salida.routes.js";
 import ajusteRoutes from "./routes/ajuste.routes.js";
@@ -27,6 +28,8 @@ app.use("/api/productos", productoRoutes);
 app.use("/api/categorias", categoriaRoutes);
 
 app.use("/api/proveedores", proveedorRoutes);
+
+app.use("/api/dispositivos", dispositivoRoutes);
 
 app.use("/api/entradas", entradaRoutes);
 

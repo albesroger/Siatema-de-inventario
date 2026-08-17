@@ -56,6 +56,57 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+export interface VentaDetalleProducto {
+  id: string;
+  productoId: string;
+  cantidad: string | number;
+  precioUnitario: string | number;
+  descuento: string | number;
+  subtotal: string | number;
+  producto: {
+    id: string;
+    codigo: string;
+    nombre: string;
+    unidadMedida: string;
+  };
+}
+
+export interface Venta {
+  id: string;
+  negocioId: string;
+  usuarioId: string;
+  dispositivoId: string;
+  numero: string | number | bigint;
+  subtotal: string | number;
+  descuento: string | number;
+  impuesto: string | number;
+  total: string | number;
+  metodoPago: string;
+  estado: string;
+  createdAt: string;
+  updatedAt: string;
+  detalleVenta: VentaDetalleProducto[];
+  usuario?: {
+    id: string;
+    nombre: string;
+    username: string;
+  };
+  dispositivo?: {
+    id: string;
+    nombre: string;
+    identificador: string;
+  };
+}
+
+export interface ProductoParaVenta {
+  id: string;
+  codigo: string;
+  nombre: string;
+  precioVenta: string | number;
+  stockActual: string | number;
+  unidadMedida: string;
+}
+
 export type UnidadMedida =
   | "UNIDAD"
   | "KILOGRAMO"
@@ -68,3 +119,17 @@ export type UnidadMedida =
   | "CAJA"
   | "PAQUETE"
   | "DOCENA";
+
+export type MetodoPago = "EFECTIVO" | "TRANSFERENCIA" | "TARJETA" | "OTRO";
+
+export interface Dispositivo {
+  id: string;
+  negocioId: string;
+  nombre: string;
+  identificador: string;
+  tipo: "DESKTOP" | "LAPTOP" | "TABLET";
+  estado: string;
+  ultimaSincronizacionAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
