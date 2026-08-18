@@ -254,31 +254,31 @@ const categoriaNombre = (categoriaId: string) => {
 
     <div class="grid gap-4 md:grid-cols-4">
       <div
-        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+        class="flex gap-2 aling-center rounded-lg bg-white px-4 py-3 border border-green-400 shadow-sm ring-1 ring-slate-200"
       >
-        <p class="text-lg text-slate-700 font-medium">Productos activos:</p>
-        <p class="mt-2 text-2xl font-bold text-slate-800">{{ totalProductos }}</p>
+        <p class="text-lg text-slate-700 font-medium">Prod activos:</p>
+        <p class="text-xl font-bold text-slate-800">{{ totalProductos }}</p>
       </div>
 
       <div
-        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+        class="flex gap-2 aling-center rounded-lg bg-white px-4 py-3 border border-green-400 shadow-sm ring-1 ring-slate-200"
       >
-        <p class="text-lg text-slate-700 font-medium">Categorías disponibles:</p>
-        <p class="mt-2 text-2xl font-bold text-slate-800">{{ categorias.length }}</p>
+        <p class="text-lg text-slate-700 font-medium">Categorías:</p>
+        <p class="text-xl font-bold text-slate-800">{{ categorias.length }}</p>
       </div>
 
       <div
-        class="rounded-lg bg-white border border-red-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+        class="flex gap-2 aling-center rounded-lg bg-white px-4 py-3 border border-green-400 shadow-sm ring-1 ring-slate-200"
       >
         <p class="text-lg text-slate-700 font-medium">Stock bajo:</p>
-        <p class="mt-2 text-2xl font-bold text-red-600">{{ stockBajo }}</p>
+        <p class="text-xl font-bold text-red-600">{{ stockBajo }}</p>
       </div>
 
       <div
-        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+        class="flex gap-2 aling-center rounded-lg bg-white px-4 py-3 border border-green-400 shadow-sm ring-1 ring-slate-200"
       >
-        <p class="text-lg text-slate-700 font-medium">Productos inactivos:</p>
-        <p class="mt-2 text-2xl font-bold text-slate-800">
+        <p class="text-lg text-slate-700 font-medium">Prod inactivos:</p>
+        <p class="text-xl font-bold text-slate-800">
           {{ totalProductosInactivos }}
         </p>
       </div>

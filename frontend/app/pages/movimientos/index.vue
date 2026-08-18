@@ -14,7 +14,13 @@ const showDetailModal = ref(false);
 const selectedMovimiento = ref<Movimiento | null>(null);
 
 const filtroTipo = ref<
-  "TODOS" | "INVENTARIO_INICIAL" | "ENTRADA" | "VENTA" | "SALIDA" | "AJUSTE_POSITIVO" | "AJUSTE_NEGATIVO"
+  | "TODOS"
+  | "INVENTARIO_INICIAL"
+  | "ENTRADA"
+  | "VENTA"
+  | "SALIDA"
+  | "AJUSTE_POSITIVO"
+  | "AJUSTE_NEGATIVO"
 >("TODOS");
 
 const loadMovimientos = async () => {
@@ -50,20 +56,20 @@ const closeDetailModal = () => {
 
 const tipoLabels: Record<string, string> = {
   INVENTARIO_INICIAL: "Inventario inicial",
-  ENTRADA: "Entrada",
-  VENTA: "Venta",
-  SALIDA: "Salida",
-  AJUSTE_POSITIVO: "Ajuste positivo",
-  AJUSTE_NEGATIVO: "Ajuste negativo",
+  ENTRADA: "ENTRADA",
+  VENTA: "VENTA",
+  SALIDA: "SALIDA",
+  AJUSTE_POSITIVO: "AJST POSITIVO",
+  AJUSTE_NEGATIVO: "AJST NEGATIVO",
 };
 
 const tipoBadgeClass: Record<string, string> = {
   INVENTARIO_INICIAL: "bg-gray-100 text-gray-700",
-  ENTRADA: "bg-green-100 text-green-700",
-  VENTA: "bg-blue-100 text-blue-700",
-  SALIDA: "bg-orange-100 text-orange-700",
-  AJUSTE_POSITIVO: "bg-emerald-100 text-emerald-700",
-  AJUSTE_NEGATIVO: "bg-red-100 text-red-700",
+  ENTRADA: "bg-green-100 text-green-700 w-28 justify-center",
+  VENTA: "bg-blue-100 text-blue-700 w-28 justify-center",
+  SALIDA: "bg-red-100 text-orange-700 w-28 justify-center",
+  AJUSTE_POSITIVO: "bg-emerald-100 text-emerald-700 w-28 justify-center",
+  AJUSTE_NEGATIVO: "bg-yellow-100 text-orange-700 w-28 justify-center",
 };
 
 const totalMovimientos = computed(() => movimientos.value.length);
@@ -93,31 +99,31 @@ const movimientosAjuste = computed(
 
     <div class="grid gap-4 md:grid-cols-4">
       <div
-        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+        class="flex gap-2 aling-center rounded-lg bg-white px-4 py-3 border border-green-400 shadow-sm ring-1 ring-slate-200"
       >
         <p class="text-lg text-slate-700 font-medium">Total movimientos:</p>
-        <p class="mt-2 text-2xl font-bold text-slate-800">{{ totalMovimientos }}</p>
+        <p class="text-xl font-bold text-slate-800">{{ totalMovimientos }}</p>
       </div>
 
       <div
-        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+        class="flex gap-2 aling-center rounded-lg bg-white px-4 py-3 border border-green-400 shadow-sm ring-1 ring-slate-200"
       >
         <p class="text-lg text-slate-700 font-medium">Entradas:</p>
-        <p class="mt-2 text-2xl font-bold text-green-600">{{ movimientosEntrada }}</p>
+        <p class="text-xl font-bold text-green-600">{{ movimientosEntrada }}</p>
       </div>
 
       <div
-        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+        class="flex gap-2 aling-center rounded-lg bg-white px-4 py-3 border border-green-400 shadow-sm ring-1 ring-slate-200"
       >
         <p class="text-lg text-slate-700 font-medium">Salidas:</p>
-        <p class="mt-2 text-2xl font-bold text-orange-600">{{ movimientosSalida }}</p>
+        <p class="text-xl font-bold text-orange-600">{{ movimientosSalida }}</p>
       </div>
 
       <div
-        class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
+        class="flex gap-2 aling-center rounded-lg bg-white px-4 py-3 border border-green-400 shadow-sm ring-1 ring-slate-200"
       >
         <p class="text-lg text-slate-700 font-medium">Ajustes:</p>
-        <p class="mt-2 text-2xl font-bold text-emerald-600">{{ movimientosAjuste }}</p>
+        <p class="text-xl font-bold text-yellow-500">{{ movimientosAjuste }}</p>
       </div>
     </div>
 
@@ -153,11 +159,7 @@ const movimientosAjuste = computed(
                 ]"
                 @click="filtroTipo = tipo as any"
               >
-                {{
-                  tipo === "TODOS"
-                    ? "Todos"
-                    : tipoLabels[tipo] || tipo
-                }}
+                {{ tipo === "TODOS" ? "Todos" : tipoLabels[tipo] || tipo }}
               </button>
             </div>
           </div>
@@ -285,12 +287,16 @@ const movimientosAjuste = computed(
                 <p class="text-sm font-medium text-slate-500">Producto</p>
                 <p class="text-slate-800">
                   {{ selectedMovimiento.producto.nombre }}
-                  <span class="text-slate-500">({{ selectedMovimiento.producto.codigo }})</span>
+                  <span class="text-slate-500"
+                    >({{ selectedMovimiento.producto.codigo }})</span
+                  >
                 </p>
               </div>
               <div>
                 <p class="text-sm font-medium text-slate-500">Cantidad</p>
-                <p class="text-slate-800">{{ Number(selectedMovimiento.cantidad).toFixed(3) }}</p>
+                <p class="text-slate-800">
+                  {{ Number(selectedMovimiento.cantidad).toFixed(3) }}
+                </p>
               </div>
               <div>
                 <p class="text-sm font-medium text-slate-500">Stock anterior</p>
