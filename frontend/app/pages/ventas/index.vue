@@ -186,12 +186,7 @@ const irAReporte = () => {
         >
           Nueva venta
         </button>
-        <button
-          class="rounded-lg bg-slate-700 px-4 py-2 text-white font-medium hover:bg-slate-800"
-          @click="irAReporte"
-        >
-          Reporte PDF
-        </button>
+      
       </div>
 
       <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">

@@ -121,7 +121,7 @@ const totalCantidadVentas = computed(() => ventas.value.length);
     </div>
 
     <!-- Filtros -->
-    <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200 no-print">
+    <div class="rounded-lg bg-white p-4 py-2 shadow-sm ring-1 ring-slate-200 no-print">
       <div class="flex flex-wrap items-center gap-6">
         <div class="flex items-center gap-2">
           <span class="text-sm font-medium text-slate-700">Tipo:</span>
@@ -168,22 +168,31 @@ const totalCantidadVentas = computed(() => ventas.value.length);
     <!-- Reporte de Ventas -->
     <div
       v-if="tipoReporte === 'ventas'"
-      class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200"
+      class="rounded-lg bg-white p-2 py-2 shadow-sm ring-1 ring-slate-200"
     >
-      <div class="text-center mb-6">
-        <h1 v-if="nombreNegocio" class="text-lg font-bold text-slate-800">
-          {{ nombreNegocio }}
-        </h1>
-        <h2 class="text-2xl font-bold text-green-800">Reporte de Ventas</h2>
-        <p class="text-sm text-slate-500 mt-1">
-          Período:
-          {{
-            periodo === "dia" ? "Hoy" : periodo === "semana" ? "Esta semana" : "Este mes"
-          }}
-        </p>
-        <p class="text-sm text-slate-500">
-          Generado: {{ new Date().toLocaleString("es-CU") }}
-        </p>
+      <div class="flex justify-around items-center text-center mb-2">
+        <div>
+          <h1 v-if="nombreNegocio" class="text-lg font-bold text-slate-800">
+            {{ nombreNegocio }}
+          </h1>
+          <h2 class="text-2xl font-bold text-green-800">Reporte de Ventas</h2>
+        </div>
+
+        <div>
+          <p class="text-sm text-slate-500 mt-1">
+            Período:
+            {{
+              periodo === "dia"
+                ? "Hoy"
+                : periodo === "semana"
+                ? "Esta semana"
+                : "Este mes"
+            }}
+          </p>
+          <p class="text-sm text-slate-500">
+            Generado: {{ new Date().toLocaleString("es-CU") }}
+          </p>
+        </div>
       </div>
 
       <div v-if="loading" class="text-center text-sm text-slate-500 py-8">
@@ -252,22 +261,31 @@ const totalCantidadVentas = computed(() => ventas.value.length);
     <!-- Reporte de Movimientos -->
     <div
       v-if="tipoReporte === 'movimientos'"
-      class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200"
+      class="rounded-lg bg-white p-2 shadow-sm ring-1 ring-slate-200"
     >
-      <div class="text-center mb-6">
-        <h1 v-if="nombreNegocio" class="text-lg font-bold text-slate-800">
-          {{ nombreNegocio }}
-        </h1>
-        <h2 class="text-2xl font-bold text-green-800">Reporte de Movimientos</h2>
-        <p class="text-sm text-slate-500 mt-1">
-          Período:
-          {{
-            periodo === "dia" ? "Hoy" : periodo === "semana" ? "Esta semana" : "Este mes"
-          }}
-        </p>
-        <p class="text-sm text-slate-500">
-          Generado: {{ new Date().toLocaleString("es-CU") }}
-        </p>
+      <div class="flex justify-around items-center text-center mb-2">
+        <div>
+          <h1 v-if="nombreNegocio" class="text-lg font-bold text-slate-800">
+            {{ nombreNegocio }}
+          </h1>
+          <h2 class="text-2xl font-bold text-green-800">Reporte de Movimientos</h2>
+        </div>
+
+        <div>
+          <p class="text-sm text-slate-500 mt-1">
+            Período:
+            {{
+              periodo === "dia"
+                ? "Hoy"
+                : periodo === "semana"
+                ? "Esta semana"
+                : "Este mes"
+            }}
+          </p>
+          <p class="text-sm text-slate-500">
+            Generado: {{ new Date().toLocaleString("es-CU") }}
+          </p>
+        </div>
       </div>
 
       <div v-if="loading" class="text-center text-sm text-slate-500 py-8">

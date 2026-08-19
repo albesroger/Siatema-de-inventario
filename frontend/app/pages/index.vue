@@ -85,7 +85,7 @@ const tipoMovimientoColors: Record<string, string> = {
     </div>
 
     <!-- Filtros de período -->
-    <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <div class="rounded-lg bg-white pl-4 py-2 shadow-sm ring-1 ring-slate-200">
       <div class="flex flex-wrap items-center gap-3">
         <span class="text-sm font-medium text-slate-700">Período:</span>
         <div class="flex rounded-lg border border-slate-200 overflow-hidden">
@@ -94,7 +94,7 @@ const tipoMovimientoColors: Record<string, string> = {
             :key="p"
             type="button"
             :class="[
-              'px-4 py-2 text-sm font-medium transition',
+              'px-4 py-1 text-sm font-medium transition',
               periodo === p
                 ? 'bg-green-600 text-white'
                 : 'bg-white text-slate-600 hover:bg-slate-50',
@@ -108,7 +108,7 @@ const tipoMovimientoColors: Record<string, string> = {
     </div>
 
     <!-- Tarjetas de estadísticas principales -->
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
       <div
         class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200"
       >
@@ -152,12 +152,8 @@ const tipoMovimientoColors: Record<string, string> = {
         </p>
         <p class="mt-1 text-sm text-slate-500">Correcciones de stock</p>
       </div>
-    </div>
 
-    <!-- Segunda fila: Productos y Ventas por método de pago -->
-    <div class="grid gap-4 md:grid-cols-2">
-      <!-- Productos -->
-      <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <div class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200">
         <h3 class="text-lg font-semibold text-green-800 mb-4">Productos</h3>
         <div class="space-y-3">
           <div class="flex justify-between items-center">
@@ -176,9 +172,9 @@ const tipoMovimientoColors: Record<string, string> = {
       </div>
 
       <!-- Ventas por método de pago -->
-      <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <div class="rounded-lg bg-white border border-green-400 p-5 py-2 shadow-sm ring-1 ring-slate-200">
         <h3 class="text-lg font-semibold text-green-800 mb-4">
-          Ventas por método de pago
+          Métodos de pago
         </h3>
         <div v-if="statsPending" class="text-sm text-slate-500">Cargando...</div>
         <div v-else-if="!stats?.ventas.porMetodoPago" class="text-sm text-slate-500">
