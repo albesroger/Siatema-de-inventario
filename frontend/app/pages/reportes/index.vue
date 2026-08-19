@@ -8,6 +8,7 @@ import type { ApiResponse } from "~/types/producto";
 const route = useRoute();
 const router = useRouter();
 const { $api } = useNuxtApp();
+const authStore = useAuthStore();
 
 const tipoReporte = ref<"ventas" | "movimientos">("ventas");
 const periodo = ref<"dia" | "semana" | "mes">("dia");
@@ -16,11 +17,36 @@ const ventas = ref<any[]>([]);
 const movimientos = ref<any[]>([]);
 const loading = ref(false);
 
+const nombreNegocio = ref<string>("");
+
 const money = new Intl.NumberFormat("es-ES", {
   style: "currency",
   currency: "USD",
   maximumFractionDigits: 2,
 });
+
+const tiposReporte = [
+  { value: "ventas", label: "Ventas" },
+  { value: "movimientos", label: "Movimientos" },
+] as const;
+
+const periodos = [
+  { value: "dia", label: "Hoy" },
+  { value: "semana", label: "Esta semana" },
+  { value: "mes", label: "Este mes" },
+] as const;
+
+const cargarNegocio = async () => {
+  try {
+    // Ajusta este endpoint al que uses realmente para el perfil del negocio/tenant
+    const response = authStore.negocioNombre
+      ? { data: { nombre: authStore.negocioNombre } }
+      : await $api<ApiResponse<{ nombre: string }>>("/negocio/perfil");
+    nombreNegocio.value = response.data.nombre;
+  } catch (error) {
+    console.error("Error al cargar datos del negocio:", error);
+  }
+};
 
 const cargarDatos = async () => {
   loading.value = true;
@@ -50,6 +76,7 @@ onMounted(() => {
   if (route.query.periodo) {
     periodo.value = route.query.periodo as "dia" | "semana" | "mes";
   }
+  cargarNegocio();
   cargarDatos();
 });
 
@@ -58,7 +85,15 @@ watch([tipoReporte, periodo], () => {
 });
 
 const imprimirReporte = () => {
+  // Reemplaza el título de la pestaña para que el navegador
+  // muestre el nombre del negocio (en vez de "localhost:3000")
+  // en el encabezado/pie de la impresión.
+  const tituloOriginal = document.title;
+  document.title = nombreNegocio.value || "Reporte";
   window.print();
+  setTimeout(() => {
+    document.title = tituloOriginal;
+  }, 500);
 };
 
 const totalVentas = computed(() => {
@@ -86,29 +121,46 @@ const totalCantidadVentas = computed(() => ventas.value.length);
     </div>
 
     <!-- Filtros -->
-    <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div class="flex flex-wrap items-center gap-4">
+    <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200 no-print">
+      <div class="flex flex-wrap items-center gap-6">
         <div class="flex items-center gap-2">
-          <label class="text-sm font-medium text-slate-700">Tipo:</label>
-          <select
-            v-model="tipoReporte"
-            class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm"
-          >
-            <option value="ventas">Ventas</option>
-            <option value="movimientos">Movimientos</option>
-          </select>
+          <span class="text-sm font-medium text-slate-700">Tipo:</span>
+          <div class="flex rounded-lg bg-slate-100 p-1">
+            <button
+              v-for="opcion in tiposReporte"
+              :key="opcion.value"
+              type="button"
+              class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+              :class="
+                tipoReporte === opcion.value
+                  ? 'bg-green-700 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              "
+              @click="tipoReporte = opcion.value"
+            >
+              {{ opcion.label }}
+            </button>
+          </div>
         </div>
 
         <div class="flex items-center gap-2">
-          <label class="text-sm font-medium text-slate-700">Período:</label>
-          <select
-            v-model="periodo"
-            class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm"
-          >
-            <option value="dia">Hoy</option>
-            <option value="semana">Esta semana</option>
-            <option value="mes">Este mes</option>
-          </select>
+          <span class="text-sm font-medium text-slate-700">Período:</span>
+          <div class="flex rounded-lg bg-slate-100 p-1">
+            <button
+              v-for="opcion in periodos"
+              :key="opcion.value"
+              type="button"
+              class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+              :class="
+                periodo === opcion.value
+                  ? 'bg-green-700 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              "
+              @click="periodo = opcion.value"
+            >
+              {{ opcion.label }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -119,6 +171,9 @@ const totalCantidadVentas = computed(() => ventas.value.length);
       class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200"
     >
       <div class="text-center mb-6">
+        <h1 v-if="nombreNegocio" class="text-lg font-bold text-slate-800">
+          {{ nombreNegocio }}
+        </h1>
         <h2 class="text-2xl font-bold text-green-800">Reporte de Ventas</h2>
         <p class="text-sm text-slate-500 mt-1">
           Período:
@@ -147,7 +202,6 @@ const totalCantidadVentas = computed(() => ventas.value.length);
               <tr class="text-left text-sm font-semibold text-slate-700">
                 <th class="px-4 py-3">Número</th>
                 <th class="px-4 py-3">Fecha</th>
-
                 <th class="px-4 py-3">Método de pago</th>
                 <th class="px-4 py-3 text-right">Subtotal</th>
                 <th class="px-4 py-3 text-right">Descuento</th>
@@ -164,7 +218,6 @@ const totalCantidadVentas = computed(() => ventas.value.length);
                 <td class="px-4 py-3 text-sm text-slate-600">
                   {{ new Date(venta.createdAt).toLocaleDateString("es-CU") }}
                 </td>
-
                 <td class="px-4 py-3 text-sm text-slate-600">{{ venta.metodoPago }}</td>
                 <td class="px-4 py-3 text-sm text-slate-600 text-right">
                   {{ money.format(Number(venta.subtotal)) }}
@@ -202,6 +255,9 @@ const totalCantidadVentas = computed(() => ventas.value.length);
       class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200"
     >
       <div class="text-center mb-6">
+        <h1 v-if="nombreNegocio" class="text-lg font-bold text-slate-800">
+          {{ nombreNegocio }}
+        </h1>
         <h2 class="text-2xl font-bold text-green-800">Reporte de Movimientos</h2>
         <p class="text-sm text-slate-500 mt-1">
           Período:
@@ -232,8 +288,7 @@ const totalCantidadVentas = computed(() => ventas.value.length);
                 <th class="px-4 py-3">Tipo</th>
                 <th class="px-4 py-3">Producto</th>
                 <th class="px-4 py-3 text-right">Cantidad</th>
-                <th class="px-4 py-3 text-right">Stock anterior</th>
-                <th class="px-4 py-3 text-right">Stock posterior</th>
+                <th class="px-4 py-3 text-right">Stock</th>
                 <th class="px-4 py-3">Usuario</th>
                 <th class="px-4 py-3">Referencia</th>
               </tr>
@@ -249,9 +304,6 @@ const totalCantidadVentas = computed(() => ventas.value.length);
                 </td>
                 <td class="px-4 py-3 text-sm text-slate-600 text-right">
                   {{ Number(mov.cantidad).toFixed(3) }}
-                </td>
-                <td class="px-4 py-3 text-sm text-slate-600 text-right">
-                  {{ Number(mov.stockAnterior).toFixed(3) }}
                 </td>
                 <td class="px-4 py-3 text-sm text-slate-600 text-right">
                   {{ Number(mov.stockPosterior).toFixed(3) }}
@@ -280,6 +332,11 @@ const totalCantidadVentas = computed(() => ventas.value.length);
 
 <style>
 @media print {
+  @page {
+    size: landscape;
+    margin: 12mm;
+  }
+
   body * {
     visibility: hidden;
   }
@@ -295,6 +352,19 @@ const totalCantidadVentas = computed(() => ventas.value.length);
   }
   .no-print {
     display: none !important;
+  }
+
+  table {
+    width: 100%;
+    table-layout: fixed;
+    font-size: 10px;
+  }
+  th,
+  td {
+    padding: 4px 6px !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal !important;
   }
 }
 </style>
