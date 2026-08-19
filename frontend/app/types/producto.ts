@@ -229,6 +229,55 @@ export interface Salida {
   detalles: DetalleSalida[];
 }
 
+export interface DashboardStats {
+  periodo: string;
+  fechaInicio: string;
+  fechaFin: string;
+  ventas: {
+    total: number;
+    cantidad: number;
+    porMetodoPago: Record<string, number>;
+    topProductos: {
+      nombre: string;
+      codigo: string;
+      cantidad: number;
+      precioVenta: number;
+      stockActual: number;
+    }[];
+  };
+  entradas: {
+    total: number;
+    cantidad: number;
+  };
+  salidas: {
+    cantidad: number;
+  };
+  ajustes: {
+    cantidad: number;
+  };
+  productos: {
+    total: number;
+    stockBajo: number;
+  };
+  ventasPorDia: {
+    fecha: string;
+    total: number;
+    cantidad: number;
+  }[];
+  movimientosRecientes: {
+    id: string;
+    tipo: string;
+    cantidad: number;
+    stockAnterior: number;
+    stockPosterior: number;
+    producto: {
+      nombre: string;
+      codigo: string;
+    };
+    createdAt: string;
+  }[];
+}
+
 export interface Movimiento {
   id: string;
   negocioId: string;

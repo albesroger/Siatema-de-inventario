@@ -7,6 +7,7 @@ import entradaRoutes from "./routes/entrada.routes.js";
 import salidaRoutes from "./routes/salida.routes.js";
 import ajusteRoutes from "./routes/ajuste.routes.js";
 import movimientoRoutes from "./routes/movimiento.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 import ventaRoutes from "./routes/venta.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import usuarioRoutes from "./routes/usuario.routes.js";
@@ -39,6 +40,8 @@ app.use("/api/salidas", salidaRoutes);
 app.use("/api/ajustes", ajusteRoutes);
 
 app.use("/api/movimientos", movimientoRoutes);
+
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use("/api/ventas", ventaRoutes);
 

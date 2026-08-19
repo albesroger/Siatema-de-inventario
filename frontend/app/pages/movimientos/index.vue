@@ -85,6 +85,13 @@ const movimientosAjuste = computed(
       (m) => m.tipo === "AJUSTE_POSITIVO" || m.tipo === "AJUSTE_NEGATIVO"
     ).length
 );
+
+const irAReporte = () => {
+  navigateTo({
+    path: "/reportes",
+    query: { tipo: "movimientos" },
+  });
+};
 </script>
 
 <template>
@@ -162,6 +169,12 @@ const movimientosAjuste = computed(
                 {{ tipo === "TODOS" ? "Todos" : tipoLabels[tipo] || tipo }}
               </button>
             </div>
+            <button
+              class="rounded-lg bg-slate-700 px-4 py-2 text-white font-medium hover:bg-slate-800"
+              @click=""
+            >
+              Reporte PDF
+            </button>
           </div>
 
           <div class="text-sm text-slate-500">
@@ -171,6 +184,12 @@ const movimientosAjuste = computed(
                 : `${movimientosFiltrados.length} registros`
             }}
           </div>
+          <button
+            class="rounded-lg bg-slate-700 px-4 py-2 text-white font-medium hover:bg-slate-800"
+            @click="irAReporte"
+          >
+            Reporte PDF
+          </button>
         </div>
 
         <div class="mt-6 overflow-hidden rounded-lg border border-slate-200">

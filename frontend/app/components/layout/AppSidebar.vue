@@ -11,6 +11,7 @@ const navigation = [
   { label: "Proveedores", to: "/proveedores" },
   { label: "Ajustes de inventario", to: "/ajustes-inventario" },
   { label: "Movimientos", to: "/movimientos" },
+  { label: "Reportes", to: "/reportes" },
 ];
 
 const route = useRoute();

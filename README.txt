@@ -127,7 +127,7 @@ API ENDPOINTS
 CREDENCIALES POR DEFECTO
 ------------------------
 Usuario: admin
-Contraseña: admin123
+Contraseña: 123456
 
 NOTAS
 -----
