@@ -169,27 +169,17 @@ const irAReporte = () => {
                 {{ tipo === "TODOS" ? "Todos" : tipoLabels[tipo] || tipo }}
               </button>
             </div>
-            <button
-              class="rounded-lg bg-slate-700 px-4 py-2 text-white font-medium hover:bg-slate-800"
-              @click=""
-            >
-              Reporte PDF
-            </button>
+          
           </div>
 
-          <div class="text-sm text-slate-500">
+          <div class="text-sm text-slate-500 align-top">
             {{
               movimientosPending
                 ? "Cargando movimientos..."
                 : `${movimientosFiltrados.length} registros`
             }}
           </div>
-          <button
-            class="rounded-lg bg-slate-700 px-4 py-2 text-white font-medium hover:bg-slate-800"
-            @click="irAReporte"
-          >
-            Reporte PDF
-          </button>
+  
         </div>
 
         <div class="mt-6 overflow-hidden rounded-lg border border-slate-200">
