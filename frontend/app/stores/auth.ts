@@ -2,6 +2,17 @@ import { defineStore } from "pinia";
 
 import type { LoginRequest, LoginResponse, Usuario } from "~/types/auth";
 
+const decodificarJwt = (token: string): { exp: number } | null => {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const decoded = JSON.parse(atob(payload));
+    return decoded;
+  } catch {
+    return null;
+  }
+};
+
 export const useAuthStore = defineStore("auth", () => {
   const token = ref<string | null>(null);
 
@@ -62,6 +73,28 @@ export const useAuthStore = defineStore("auth", () => {
     navigateTo("/login");
   };
 
+  const verificarExpiracion = () => {
+    if (!import.meta.client) return;
+
+    const tokenActual = token.value || localStorage.getItem("token");
+    if (!tokenActual) return;
+
+    const decoded = decodificarJwt(tokenActual);
+    if (!decoded || !decoded.exp) return;
+
+    const ahora = Math.floor(Date.now() / 1000);
+    const tiempoRestante = decoded.exp - ahora;
+
+    if (tiempoRestante <= 0) {
+      logout();
+      return;
+    }
+
+    setTimeout(() => {
+      logout();
+    }, tiempoRestante * 1000);
+  };
+
   const cargarSesion = () => {
     if (initialized.value) return;
 
@@ -90,6 +123,8 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     initialized.value = true;
+
+    verificarExpiracion();
   };
 
   return {
@@ -101,5 +136,6 @@ export const useAuthStore = defineStore("auth", () => {
     login,
     logout,
     cargarSesion,
+    verificarExpiracion,
   };
 });

@@ -16,6 +16,11 @@ export default defineNuxtPlugin(() => {
       headers.set("Authorization", `Bearer ${token}`);
       options.headers = headers;
     },
+    onResponseError({ response }) {
+      if (response.status === 401) {
+        authStore.logout();
+      }
+    },
   });
 
   return {

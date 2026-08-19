@@ -6,7 +6,7 @@ if (!JWT_SECRET) {
   throw new Error("JWT_SECRET no está configurado");
 }
 
-export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "8h";
+export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30m";
 
 export interface JwtPayload {
   usuarioId: string;
