@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 export const crearUsuarioSchema = z.object({
-  negocioId: z.string().uuid("El negocioId debe ser un UUID válido"),
-
   nombre: z
     .string()
     .min(2, "El nombre debe tener al menos 2 caracteres")

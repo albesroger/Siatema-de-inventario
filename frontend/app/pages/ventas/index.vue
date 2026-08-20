@@ -6,6 +6,7 @@ definePageMeta({
 import type {
   ApiResponse,
   MetodoPago,
+  Producto,
   ProductoParaVenta,
   Venta,
   VentaDetalleProducto,
@@ -141,6 +142,195 @@ const irAReporte = () => {
     query: { tipo: "ventas" },
   });
 };
+
+// ========================================================
+// PUNTO DE VENTA (NUEVA VENTA)
+// ========================================================
+
+const showNewVentaModal = ref(false);
+const productosDisponibles = ref<ProductoParaVenta[]>([]);
+const dispositivosDisponibles = ref<{ id: string; nombre: string }[]>([]);
+const carrito = ref<VentaDetalleProducto[]>([]);
+const productoSeleccionadoId = ref("");
+const cantidadProducto = ref(1);
+const descuentoGeneral = ref(0);
+const impuestoGeneral = ref(0);
+const metodoPago = ref<MetodoPago>("EFECTIVO");
+const dispositivoId = ref("");
+const formMessage = ref("");
+
+const loadProductosParaVenta = async () => {
+  const response = await $api<ApiResponse<Producto[]>>("/productos");
+  productosDisponibles.value = response.data
+    .filter((p) => p.estado === "ACTIVO" && Number(p.stockActual) > 0)
+    .map((p) => ({
+      id: p.id,
+      codigo: p.codigo,
+      nombre: p.nombre,
+      precioVenta: p.precioVenta,
+      stockActual: p.stockActual,
+      unidadMedida: p.unidadMedida,
+    }));
+};
+
+const loadDispositivos = async () => {
+  const response = await $api<ApiResponse<{ id: string; nombre: string; estado: string }[]>>(
+    "/dispositivos"
+  );
+  dispositivosDisponibles.value = response.data.filter((d) => d.estado === "ACTIVO");
+};
+
+const openNewVenta = async () => {
+  formMessage.value = "";
+  carrito.value = [];
+  descuentoGeneral.value = 0;
+  impuestoGeneral.value = 0;
+  metodoPago.value = "EFECTIVO";
+  dispositivoId.value = "";
+  showNewVentaModal.value = true;
+  await Promise.all([loadProductosParaVenta(), loadDispositivos()]);
+};
+
+const closeNewVenta = () => {
+  showNewVentaModal.value = false;
+  formMessage.value = "";
+};
+
+const agregarAlCarrito = () => {
+  formMessage.value = "";
+
+  if (!productoSeleccionadoId.value) {
+    formMessage.value = "Selecciona un producto.";
+    return;
+  }
+
+  const producto = productosDisponibles.value.find(
+    (p) => p.id === productoSeleccionadoId.value
+  );
+
+  if (!producto) {
+    formMessage.value = "Producto no encontrado.";
+    return;
+  }
+
+  const cantidad = Number(cantidadProducto.value);
+
+  if (cantidad <= 0) {
+    formMessage.value = "La cantidad debe ser mayor a 0.";
+    return;
+  }
+
+  if (cantidad > Number(producto.stockActual)) {
+    formMessage.value = `Stock insuficiente. Disponible: ${producto.stockActual}`;
+    return;
+  }
+
+  const existente = carrito.value.find((item) => item.productoId === producto.id);
+
+  if (existente) {
+    const nuevaCantidad = Number(existente.cantidad) + cantidad;
+    if (nuevaCantidad > Number(producto.stockActual)) {
+      formMessage.value = `Stock insuficiente. Disponible: ${producto.stockActual}`;
+      return;
+    }
+    existente.cantidad = nuevaCantidad;
+    existente.subtotal = Number(existente.cantidad) * Number(producto.precioVenta);
+  } else {
+    carrito.value.push({
+      id: crypto.randomUUID(),
+      productoId: producto.id,
+      cantidad,
+      precioUnitario: Number(producto.precioVenta),
+      descuento: 0,
+      subtotal: cantidad * Number(producto.precioVenta),
+      producto: {
+        id: producto.id,
+        codigo: producto.codigo,
+        nombre: producto.nombre,
+        unidadMedida: producto.unidadMedida,
+      },
+    });
+  }
+
+  productoSeleccionadoId.value = "";
+  cantidadProducto.value = 1;
+  formMessage.value = "";
+};
+
+const eliminarDelCarrito = (itemId: string) => {
+  carrito.value = carrito.value.filter((item) => item.id !== itemId);
+};
+
+const actualizarCantidad = (itemId: string, cantidad: number) => {
+  const item = carrito.value.find((i) => i.id === itemId);
+  const producto = productosDisponibles.value.find((p) => p.id === item?.productoId);
+
+  if (!item || !producto) return;
+
+  if (cantidad <= 0) {
+    eliminarDelCarrito(itemId);
+    return;
+  }
+
+  if (cantidad > Number(producto.stockActual)) {
+    formMessage.value = `Stock insuficiente. Disponible: ${producto.stockActual}`;
+    return;
+  }
+
+  item.cantidad = cantidad;
+  item.subtotal = cantidad * Number(item.precioUnitario);
+  formMessage.value = "";
+};
+
+const subtotalCarrito = computed(() =>
+  carrito.value.reduce((sum, item) => sum + Number(item.subtotal), 0)
+);
+
+const totalCarrito = computed(() => {
+  const subtotal = subtotalCarrito.value;
+  const descuento = Number(descuentoGeneral.value);
+  const impuesto = Number(impuestoGeneral.value);
+  return Math.max(0, subtotal - descuento + impuesto);
+});
+
+const submitVenta = async () => {
+  formMessage.value = "";
+
+  if (carrito.value.length === 0) {
+    formMessage.value = "Agrega al menos un producto a la venta.";
+    return;
+  }
+
+  if (!dispositivoId.value) {
+    formMessage.value = "Selecciona un dispositivo.";
+    return;
+  }
+
+  const payload = {
+    dispositivoId: dispositivoId.value,
+    descuento: Number(descuentoGeneral.value),
+    impuesto: Number(impuestoGeneral.value),
+    metodoPago: metodoPago.value,
+    detalles: carrito.value.map((item) => ({
+      productoId: item.productoId,
+      cantidad: Number(item.cantidad),
+      descuento: Number(item.descuento),
+    })),
+  };
+
+  try {
+    await $api("/ventas", {
+      method: "POST",
+      body: payload,
+    });
+
+    await loadVentas();
+    closeNewVenta();
+  } catch (error: any) {
+    formMessage.value =
+      error?.data?.message || error?.message || "No se pudo registrar la venta";
+  }
+};
 </script>
 
 <template>
@@ -182,7 +372,7 @@ const irAReporte = () => {
       >
         <button
           class="rounded-lg bg-green-600 px-4 py-2 text-white font-medium hover:bg-green-700"
-          @click=""
+          @click="openNewVenta"
         >
           Nueva venta
         </button>
@@ -345,6 +535,225 @@ const irAReporte = () => {
         </div>
       </div>
     </div>
+
+    <!-- Modal: Nueva venta (punto de venta) -->
+    <teleport to="body">
+      <div
+        v-if="showNewVentaModal"
+        class="fixed inset-0 z-50 flex items-center justify-center"
+      >
+        <div class="absolute inset-0 bg-black/50" @click="closeNewVenta"></div>
+
+        <div
+          class="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-lg"
+        >
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-green-700">Nueva venta</h3>
+            <button type="button" class="text-slate-500" @click="closeNewVenta">✕</button>
+          </div>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="mb-2 block text-md font-medium text-slate-700"
+                >Dispositivo *</label
+              >
+              <select
+                v-model="dispositivoId"
+                class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">Selecciona un dispositivo</option>
+                <option
+                  v-for="dispositivo in dispositivosDisponibles"
+                  :key="dispositivo.id"
+                  :value="dispositivo.id"
+                >
+                  {{ dispositivo.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-md font-medium text-slate-700"
+                >Método de pago *</label
+              >
+              <select
+                v-model="metodoPago"
+                class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TRANSFERENCIA">Transferencia</option>
+                <option value="TARJETA">Tarjeta</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-lg border border-slate-200 p-4">
+            <p class="text-sm font-semibold text-slate-700 mb-3">Agregar productos</p>
+
+            <div class="grid gap-3 md:grid-cols-3">
+              <div class="md:col-span-1">
+                <select
+                  v-model="productoSeleccionadoId"
+                  class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Selecciona un producto</option>
+                  <option
+                    v-for="producto in productosDisponibles"
+                    :key="producto.id"
+                    :value="producto.id"
+                  >
+                    {{ producto.nombre }} (Stock: {{ producto.stockActual }})
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <input
+                  v-model.number="cantidadProducto"
+                  type="number"
+                  min="1"
+                  step="0.001"
+                  placeholder="Cantidad"
+                  class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  class="w-full rounded-lg bg-green-600 px-4 py-2 text-white font-medium hover:bg-green-700"
+                  @click="agregarAlCarrito"
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <p class="text-sm font-semibold text-slate-700 mb-2">Carrito</p>
+
+            <div class="overflow-hidden rounded-lg border border-slate-200">
+              <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                  <tr class="text-left text-sm font-semibold text-slate-700">
+                    <th class="px-4 py-3">Producto</th>
+                    <th class="px-4 py-3">Precio</th>
+                    <th class="px-4 py-3">Cantidad</th>
+                    <th class="px-4 py-3">Subtotal</th>
+                    <th class="px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                  <tr v-if="carrito.length === 0">
+                    <td colspan="5" class="px-4 py-8 text-center text-sm text-slate-500">
+                      El carrito está vacío. Agrega productos.
+                    </td>
+                  </tr>
+                  <tr v-for="item in carrito" :key="item.id">
+                    <td class="px-4 py-2 text-sm text-slate-800">{{ item.producto.nombre }}</td>
+                    <td class="px-4 py-2 text-sm text-slate-600">
+                      ${{ Number(item.precioUnitario).toFixed(2) }}
+                    </td>
+                    <td class="px-4 py-2 text-sm text-slate-600">
+                      <input
+                        :value="item.cantidad"
+                        type="number"
+                        min="1"
+                        step="0.001"
+                        class="w-24 rounded-lg border border-slate-300 px-2 py-1 text-sm"
+                        @change="
+                          actualizarCantidad(
+                            item.id,
+                            Number(($event.target as HTMLInputElement).value)
+                          )
+                        "
+                      />
+                    </td>
+                    <td class="px-4 py-2 text-sm text-slate-600 font-medium">
+                      ${{ Number(item.subtotal).toFixed(2) }}
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                      <button
+                        type="button"
+                        class="rounded-lg border border-red-200 px-3 py-1 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                        @click="eliminarDelCarrito(item.id)"
+                      >
+                        Quitar
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="mb-2 block text-md font-medium text-slate-700"
+                  >Descuento</label
+                >
+                <input
+                  v-model.number="descuentoGeneral"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              <div>
+                <label class="mb-2 block text-md font-medium text-slate-700"
+                  >Impuesto</label
+                >
+                <input
+                  v-model.number="impuestoGeneral"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+            </div>
+
+            <div class="flex flex-col items-end justify-end gap-1">
+              <p class="text-sm text-slate-500">
+                Subtotal: ${{ subtotalCarrito.toFixed(2) }}
+              </p>
+              <p class="text-xl font-bold text-green-700">
+                Total: ${{ totalCarrito.toFixed(2) }}
+              </p>
+            </div>
+          </div>
+
+          <div
+            v-if="formMessage"
+            class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+          >
+            {{ formMessage }}
+          </div>
+
+          <div class="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              class="rounded-xl border border-slate-300 px-4 py-2 hover:bg-slate-100"
+              @click="closeNewVenta"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="rounded-xl bg-green-600 hover:bg-green-700 px-4 py-2 font-semibold text-white"
+              @click="submitVenta"
+            >
+              Registrar venta
+            </button>
+          </div>
+        </div>
+      </div>
+    </teleport>
 
     <!-- Modal de detalle -->
     <teleport to="body">

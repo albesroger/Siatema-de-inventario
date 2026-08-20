@@ -1,21 +1,23 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../config/database.js";
 
-export const crearUsuario = async (data: {
-  negocioId: string;
-  nombre: string;
-  username: string;
-  password: string;
-  rol: "ADMINISTRADOR" | "VENDEDOR";
-  estado: "ACTIVO" | "INACTIVO";
-}) => {
+export const crearUsuario = async (
+  data: {
+    nombre: string;
+    username: string;
+    password: string;
+    rol: "ADMINISTRADOR" | "VENDEDOR";
+    estado: "ACTIVO" | "INACTIVO";
+  },
+  negocioId: string,
+) => {
   // ========================================================
   // 1. VERIFICAR USERNAME
   // ========================================================
 
   const usuarioExistente = await prisma.usuario.findFirst({
     where: {
-      negocioId: data.negocioId,
+      negocioId,
       username: data.username,
     },
   });
@@ -36,7 +38,7 @@ export const crearUsuario = async (data: {
 
   const usuario = await prisma.usuario.create({
     data: {
-      negocioId: data.negocioId,
+      negocioId,
       nombre: data.nombre,
       username: data.username,
       passwordHash,

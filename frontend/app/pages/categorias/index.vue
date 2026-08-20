@@ -162,6 +162,7 @@ const eliminarCategoria = async (categoria: CategoriaResumen) => {
         class="rounded-lg bg-white p-2 pl-3 shadow-sm ring-1 ring-slate-200 flex flex-col justify-center items-start gap-4"
       >
         <button
+          v-if="authStore.isAdmin"
           class="rounded-lg bg-green-600 px-4 py-2 text-white font-medium hover:bg-green-700"
           @click="openNew"
         >
@@ -241,7 +242,7 @@ const eliminarCategoria = async (categoria: CategoriaResumen) => {
                 </td>
 
                 <td class="px-4 py-2">
-                  <div class="flex flex-wrap gap-2">
+                  <div v-if="authStore.isAdmin" class="flex flex-wrap gap-2">
                     <button
                       type="button"
                       class="rounded-lg border border-blue-200 px-3 py-1 text-sm font-medium text-blue-700 transition hover:bg-blue-50"

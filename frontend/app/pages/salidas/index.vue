@@ -3,7 +3,7 @@ definePageMeta({
   middleware: "auth",
 });
 
-import type { ApiResponse, Salida } from "~/types/producto";
+import type { ApiResponse, Producto, Salida } from "~/types/producto";
 
 const authStore = useAuthStore();
 const { $api } = useNuxtApp();
@@ -94,6 +94,157 @@ const salidasCompletadas = computed(
 const salidasAnuladas = computed(
   () => salidas.value.filter((s) => s.estado === "ANULADA").length
 );
+
+// ========================================================
+// NUEVA SALIDA
+// ========================================================
+
+const showNewSalidaModal = ref(false);
+const dispositivosDisponibles = ref<{ id: string; nombre: string }[]>([]);
+const productosDisponibles = ref<Producto[]>([]);
+const selectedDispositivoId = ref("");
+const motivoSalida = ref("");
+const observacionesSalida = ref("");
+const productoSeleccionadoId = ref("");
+const cantidadSalida = ref(1);
+const detallesSalida = ref<
+  {
+    id: string;
+    productoId: string;
+    cantidad: number;
+    observaciones: string;
+  }[]
+>([]);
+const formMessage = ref("");
+
+const loadDispositivosSalida = async () => {
+  const response = await $api<ApiResponse<{ id: string; nombre: string; estado: string }[]>>(
+    "/dispositivos"
+  );
+  dispositivosDisponibles.value = response.data.filter((d) => d.estado === "ACTIVO");
+};
+
+const loadProductosSalida = async () => {
+  const response = await $api<ApiResponse<Producto[]>>("/productos");
+  productosDisponibles.value = response.data.filter(
+    (p) => p.estado === "ACTIVO" && Number(p.stockActual) > 0
+  );
+};
+
+const openNewSalida = async () => {
+  formMessage.value = "";
+  detallesSalida.value = [];
+  motivoSalida.value = "";
+  observacionesSalida.value = "";
+  selectedDispositivoId.value = "";
+  showNewSalidaModal.value = true;
+  await Promise.all([loadDispositivosSalida(), loadProductosSalida()]);
+};
+
+const closeNewSalida = () => {
+  showNewSalidaModal.value = false;
+  formMessage.value = "";
+};
+
+const agregarProductoSalida = () => {
+  formMessage.value = "";
+
+  if (!productoSeleccionadoId.value) {
+    formMessage.value = "Selecciona un producto.";
+    return;
+  }
+
+  const producto = productosDisponibles.value.find(
+    (p) => p.id === productoSeleccionadoId.value
+  );
+
+  if (!producto) {
+    formMessage.value = "Producto no encontrado.";
+    return;
+  }
+
+  const cantidad = Number(cantidadSalida.value);
+
+  if (cantidad <= 0) {
+    formMessage.value = "La cantidad debe ser mayor a 0.";
+    return;
+  }
+
+  if (cantidad > Number(producto.stockActual)) {
+    formMessage.value = `Stock insuficiente. Disponible: ${producto.stockActual}`;
+    return;
+  }
+
+  const existente = detallesSalida.value.find((d) => d.productoId === producto.id);
+
+  if (existente) {
+    if (existente.cantidad + cantidad > Number(producto.stockActual)) {
+      formMessage.value = `Stock insuficiente. Disponible: ${producto.stockActual}`;
+      return;
+    }
+    existente.cantidad += cantidad;
+  } else {
+    detallesSalida.value.push({
+      id: crypto.randomUUID(),
+      productoId: producto.id,
+      cantidad,
+      observaciones: "",
+    });
+  }
+
+  productoSeleccionadoId.value = "";
+  cantidadSalida.value = 1;
+};
+
+const eliminarDetalleSalida = (id: string) => {
+  detallesSalida.value = detallesSalida.value.filter((d) => d.id !== id);
+};
+
+const nombreProducto = (productoId: string) =>
+  productosDisponibles.value.find((p) => p.id === productoId)?.nombre || "—";
+
+const submitSalida = async () => {
+  formMessage.value = "";
+
+  if (detallesSalida.value.length === 0) {
+    formMessage.value = "Agrega al menos un producto a la salida.";
+    return;
+  }
+
+  if (!selectedDispositivoId.value) {
+    formMessage.value = "Selecciona un dispositivo.";
+    return;
+  }
+
+  if (!motivoSalida.value) {
+    formMessage.value = "Selecciona un motivo.";
+    return;
+  }
+
+  const payload = {
+    dispositivoId: selectedDispositivoId.value,
+    motivo: motivoSalida.value,
+    observaciones: observacionesSalida.value.trim() || undefined,
+    detalles: detallesSalida.value.map((d) => ({
+      productoId: d.productoId,
+      cantidad: Number(d.cantidad),
+      observaciones: d.observaciones.trim() || undefined,
+    })),
+  };
+
+  try {
+    await $api("/salidas", {
+      method: "POST",
+      body: payload,
+    });
+
+    await loadSalidas();
+    closeNewSalida();
+  } catch (error: any) {
+    formMessage.value =
+      error?.data?.message || error?.message || "No se pudo registrar la salida";
+  }
+};
 </script>
 
 <template>
@@ -135,7 +286,7 @@ const salidasAnuladas = computed(
       >
         <button
           class="rounded-lg bg-green-600 px-4 py-2 text-white font-medium hover:bg-green-700"
-          @click=""
+          @click="openNewSalida"
         >
           Nueva salida
         </button>
@@ -272,6 +423,188 @@ const salidasAnuladas = computed(
         </div>
       </div>
     </div>
+
+    <!-- Modal: Nueva salida -->
+    <teleport to="body">
+      <div
+        v-if="showNewSalidaModal"
+        class="fixed inset-0 z-50 flex items-center justify-center"
+      >
+        <div class="absolute inset-0 bg-black/50" @click="closeNewSalida"></div>
+
+        <div
+          class="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-lg"
+        >
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-green-700">Nueva salida</h3>
+            <button type="button" class="text-slate-500" @click="closeNewSalida">✕</button>
+          </div>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="mb-2 block text-md font-medium text-slate-700"
+                >Dispositivo *</label
+              >
+              <select
+                v-model="selectedDispositivoId"
+                class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">Selecciona un dispositivo</option>
+                <option
+                  v-for="dispositivo in dispositivosDisponibles"
+                  :key="dispositivo.id"
+                  :value="dispositivo.id"
+                >
+                  {{ dispositivo.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-md font-medium text-slate-700"
+                >Motivo *</label
+              >
+              <select
+                v-model="motivoSalida"
+                class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">Selecciona un motivo</option>
+                <option
+                  v-for="(label, value) in motivoLabels"
+                  :key="value"
+                  :value="value"
+                >
+                  {{ label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-2 block text-md font-medium text-slate-700"
+                >Observaciones</label
+              >
+              <textarea
+                v-model="observacionesSalida"
+                rows="2"
+                class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-lg border border-slate-200 p-4">
+            <p class="text-sm font-semibold text-slate-700 mb-3">Agregar productos</p>
+
+            <div class="grid gap-3 md:grid-cols-3">
+              <div>
+                <select
+                  v-model="productoSeleccionadoId"
+                  class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Selecciona un producto</option>
+                  <option
+                    v-for="producto in productosDisponibles"
+                    :key="producto.id"
+                    :value="producto.id"
+                  >
+                    {{ producto.nombre }}
+                    (Stock: {{ Number(producto.stockActual).toFixed(3) }})
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <input
+                  v-model.number="cantidadSalida"
+                  type="number"
+                  min="1"
+                  step="0.001"
+                  placeholder="Cantidad"
+                  class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  class="w-full rounded-lg bg-green-600 px-4 py-2 text-white font-medium hover:bg-green-700"
+                  @click="agregarProductoSalida"
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <p class="text-sm font-semibold text-slate-700 mb-2">Detalles</p>
+
+            <div class="overflow-hidden rounded-lg border border-slate-200">
+              <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                  <tr class="text-left text-sm font-semibold text-slate-700">
+                    <th class="px-4 py-3">Producto</th>
+                    <th class="px-4 py-3">Cantidad</th>
+                    <th class="px-4 py-3">Observaciones</th>
+                    <th class="px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                  <tr v-if="detallesSalida.length === 0">
+                    <td colspan="4" class="px-4 py-8 text-center text-sm text-slate-500">
+                      No hay productos agregados todavía.
+                    </td>
+                  </tr>
+                  <tr v-for="detalle in detallesSalida" :key="detalle.id">
+                    <td class="px-4 py-2 text-sm text-slate-800">
+                      {{ nombreProducto(detalle.productoId) }}
+                    </td>
+                    <td class="px-4 py-2 text-sm text-slate-600">
+                      {{ Number(detalle.cantidad).toFixed(3) }}
+                    </td>
+                    <td class="px-4 py-2 text-sm text-slate-600">
+                      {{ detalle.observaciones || "—" }}
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                      <button
+                        type="button"
+                        class="rounded-lg border border-red-200 px-3 py-1 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                        @click="eliminarDetalleSalida(detalle.id)"
+                      >
+                        Quitar
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div
+            v-if="formMessage"
+            class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+          >
+            {{ formMessage }}
+          </div>
+
+          <div class="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              class="rounded-xl border border-slate-300 px-4 py-2 hover:bg-slate-100"
+              @click="closeNewSalida"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="rounded-xl bg-green-600 hover:bg-green-700 px-4 py-2 font-semibold text-white"
+              @click="submitSalida"
+            >
+              Registrar salida
+            </button>
+          </div>
+        </div>
+      </div>
+    </teleport>
 
     <!-- Modal de detalle -->
     <teleport to="body">

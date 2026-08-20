@@ -251,6 +251,7 @@ const ajustesNegativos = computed(
         class="rounded-lg bg-white p-2 pl-3 shadow-sm ring-1 ring-slate-200 flex flex-col justify-center items-start gap-4"
       >
         <button
+          v-if="authStore.isAdmin"
           class="rounded-lg bg-green-600 px-4 py-2 text-white font-medium hover:bg-green-700"
           @click="openCreateModal"
         >

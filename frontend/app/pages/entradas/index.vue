@@ -3,7 +3,7 @@ definePageMeta({
   middleware: "auth",
 });
 
-import type { ApiResponse, Entrada } from "~/types/producto";
+import type { ApiResponse, Entrada, Producto, Proveedor } from "~/types/producto";
 
 const authStore = useAuthStore();
 const { $api } = useNuxtApp();
@@ -94,6 +94,173 @@ const entradasCompletadas = computed(
 const entradasAnuladas = computed(
   () => entradas.value.filter((e) => e.estado === "ANULADA").length
 );
+
+// ========================================================
+// NUEVA ENTRADA
+// ========================================================
+
+const showNewEntradaModal = ref(false);
+const dispositivosDisponibles = ref<{ id: string; nombre: string }[]>([]);
+const proveedoresDisponibles = ref<Proveedor[]>([]);
+const productosDisponibles = ref<Producto[]>([]);
+const selectedDispositivoId = ref("");
+const proveedorId = ref("");
+const numeroDocumento = ref("");
+const descuentoEntrada = ref(0);
+const observacionesEntrada = ref("");
+const productoSeleccionadoId = ref("");
+const cantidadEntrada = ref(1);
+const costoUnitarioEntrada = ref(0);
+const detallesEntrada = ref<
+  {
+    id: string;
+    productoId: string;
+    cantidad: number;
+    costoUnitario: number;
+    descuento: number;
+  }[]
+>([]);
+const formMessage = ref("");
+
+const loadDispositivosEntrada = async () => {
+  const response = await $api<ApiResponse<{ id: string; nombre: string; estado: string }[]>>(
+    "/dispositivos"
+  );
+  dispositivosDisponibles.value = response.data.filter((d) => d.estado === "ACTIVO");
+};
+
+const loadProveedoresEntrada = async () => {
+  const response = await $api<ApiResponse<Proveedor[]>>("/proveedores");
+  proveedoresDisponibles.value = response.data.filter((p) => p.estado === "ACTIVO");
+};
+
+const loadProductosEntrada = async () => {
+  const response = await $api<ApiResponse<Producto[]>>("/productos");
+  productosDisponibles.value = response.data.filter((p) => p.estado === "ACTIVO");
+};
+
+const openNewEntrada = async () => {
+  formMessage.value = "";
+  detallesEntrada.value = [];
+  proveedorId.value = "";
+  numeroDocumento.value = "";
+  descuentoEntrada.value = 0;
+  observacionesEntrada.value = "";
+  selectedDispositivoId.value = "";
+  showNewEntradaModal.value = true;
+  await Promise.all([
+    loadDispositivosEntrada(),
+    loadProveedoresEntrada(),
+    loadProductosEntrada(),
+  ]);
+};
+
+const closeNewEntrada = () => {
+  showNewEntradaModal.value = false;
+  formMessage.value = "";
+};
+
+const agregarProductoEntrada = () => {
+  formMessage.value = "";
+
+  if (!productoSeleccionadoId.value) {
+    formMessage.value = "Selecciona un producto.";
+    return;
+  }
+
+  if (detallesEntrada.value.some((d) => d.productoId === productoSeleccionadoId.value)) {
+    formMessage.value = "El producto ya está en la entrada.";
+    return;
+  }
+
+  const cantidad = Number(cantidadEntrada.value);
+
+  if (cantidad <= 0) {
+    formMessage.value = "La cantidad debe ser mayor a 0.";
+    return;
+  }
+
+  const costo = Number(costoUnitarioEntrada.value);
+
+  if (costo < 0) {
+    formMessage.value = "El costo unitario no puede ser negativo.";
+    return;
+  }
+
+  detallesEntrada.value.push({
+    id: crypto.randomUUID(),
+    productoId: productoSeleccionadoId.value,
+    cantidad,
+    costoUnitario: costo,
+    descuento: 0,
+  });
+
+  productoSeleccionadoId.value = "";
+  cantidadEntrada.value = 1;
+  costoUnitarioEntrada.value = 0;
+};
+
+const eliminarDetalleEntrada = (id: string) => {
+  detallesEntrada.value = detallesEntrada.value.filter((d) => d.id !== id);
+};
+
+const nombreProductoEntrada = (productoId: string) =>
+  productosDisponibles.value.find((p) => p.id === productoId)?.nombre || "—";
+
+const subtotalDetalleEntrada = (detalle: {
+  cantidad: number;
+  costoUnitario: number;
+  descuento: number;
+}) => Math.max(0, detalle.cantidad * detalle.costoUnitario - detalle.descuento);
+
+const subtotalEntradas = computed(() =>
+  detallesEntrada.value.reduce((sum, detalle) => sum + subtotalDetalleEntrada(detalle), 0)
+);
+
+const totalEntradasCalculado = computed(() =>
+  Math.max(0, subtotalEntradas.value - Number(descuentoEntrada.value))
+);
+
+const submitEntrada = async () => {
+  formMessage.value = "";
+
+  if (detallesEntrada.value.length === 0) {
+    formMessage.value = "Agrega al menos un producto a la entrada.";
+    return;
+  }
+
+  if (!selectedDispositivoId.value) {
+    formMessage.value = "Selecciona un dispositivo.";
+    return;
+  }
+
+  const payload = {
+    proveedorId: proveedorId.value || undefined,
+    dispositivoId: selectedDispositivoId.value,
+    numeroDocumento: numeroDocumento.value.trim() || undefined,
+    descuento: Number(descuentoEntrada.value),
+    observaciones: observacionesEntrada.value.trim() || undefined,
+    detalles: detallesEntrada.value.map((d) => ({
+      productoId: d.productoId,
+      cantidad: Number(d.cantidad),
+      costoUnitario: Number(d.costoUnitario),
+      descuento: Number(d.descuento),
+    })),
+  };
+
+  try {
+    await $api("/entradas", {
+      method: "POST",
+      body: payload,
+    });
+
+    await loadEntradas();
+    closeNewEntrada();
+  } catch (error: any) {
+    formMessage.value =
+      error?.data?.message || error?.message || "No se pudo registrar la entrada";
+  }
+};
 </script>
 
 <template>
@@ -135,7 +302,7 @@ const entradasAnuladas = computed(
       >
         <button
           class="rounded-lg bg-green-600 px-4 py-2 text-white font-medium hover:bg-green-700"
-          @click=""
+          @click="openNewEntrada"
         >
           Nueva entrada
         </button>
@@ -277,6 +444,237 @@ const entradasAnuladas = computed(
         </div>
       </div>
     </div>
+
+    <!-- Modal: Nueva entrada -->
+    <teleport to="body">
+      <div
+        v-if="showNewEntradaModal"
+        class="fixed inset-0 z-50 flex items-center justify-center"
+      >
+        <div class="absolute inset-0 bg-black/50" @click="closeNewEntrada"></div>
+
+        <div
+          class="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-lg"
+        >
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-green-700">Nueva entrada</h3>
+            <button type="button" class="text-slate-500" @click="closeNewEntrada">✕</button>
+          </div>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="mb-2 block text-md font-medium text-slate-700"
+                >Dispositivo *</label
+              >
+              <select
+                v-model="selectedDispositivoId"
+                class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">Selecciona un dispositivo</option>
+                <option
+                  v-for="dispositivo in dispositivosDisponibles"
+                  :key="dispositivo.id"
+                  :value="dispositivo.id"
+                >
+                  {{ dispositivo.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-md font-medium text-slate-700"
+                >Proveedor</label
+              >
+              <select
+                v-model="proveedorId"
+                class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">Sin proveedor</option>
+                <option
+                  v-for="proveedor in proveedoresDisponibles"
+                  :key="proveedor.id"
+                  :value="proveedor.id"
+                >
+                  {{ proveedor.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-md font-medium text-slate-700"
+                >Número de documento</label
+              >
+              <input
+                v-model="numeroDocumento"
+                type="text"
+                class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label class="mb-2 block text-md font-medium text-slate-700"
+                >Descuento general</label
+              >
+              <input
+                v-model.number="descuentoEntrada"
+                type="number"
+                min="0"
+                step="0.01"
+                class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-2 block text-md font-medium text-slate-700"
+                >Observaciones</label
+              >
+              <textarea
+                v-model="observacionesEntrada"
+                rows="2"
+                class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-lg border border-slate-200 p-4">
+            <p class="text-sm font-semibold text-slate-700 mb-3">Agregar productos</p>
+
+            <div class="grid gap-3 md:grid-cols-4">
+              <div>
+                <select
+                  v-model="productoSeleccionadoId"
+                  class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Selecciona un producto</option>
+                  <option
+                    v-for="producto in productosDisponibles"
+                    :key="producto.id"
+                    :value="producto.id"
+                  >
+                    {{ producto.nombre }}
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <input
+                  v-model.number="cantidadEntrada"
+                  type="number"
+                  min="1"
+                  step="0.001"
+                  placeholder="Cantidad"
+                  class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              <div>
+                <input
+                  v-model.number="costoUnitarioEntrada"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Costo unitario"
+                  class="w-full rounded-xl border border-slate-300 px-2 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  class="w-full rounded-lg bg-green-600 px-4 py-2 text-white font-medium hover:bg-green-700"
+                  @click="agregarProductoEntrada"
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <p class="text-sm font-semibold text-slate-700 mb-2">Detalles</p>
+
+            <div class="overflow-hidden rounded-lg border border-slate-200">
+              <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                  <tr class="text-left text-sm font-semibold text-slate-700">
+                    <th class="px-4 py-3">Producto</th>
+                    <th class="px-4 py-3">Cantidad</th>
+                    <th class="px-4 py-3">Costo unit.</th>
+                    <th class="px-4 py-3">Subtotal</th>
+                    <th class="px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                  <tr v-if="detallesEntrada.length === 0">
+                    <td colspan="5" class="px-4 py-8 text-center text-sm text-slate-500">
+                      No hay productos agregados todavía.
+                    </td>
+                  </tr>
+                  <tr v-for="detalle in detallesEntrada" :key="detalle.id">
+                    <td class="px-4 py-2 text-sm text-slate-800">
+                      {{ nombreProductoEntrada(detalle.productoId) }}
+                    </td>
+                    <td class="px-4 py-2 text-sm text-slate-600">
+                      {{ Number(detalle.cantidad).toFixed(3) }}
+                    </td>
+                    <td class="px-4 py-2 text-sm text-slate-600">
+                      ${{ Number(detalle.costoUnitario).toFixed(2) }}
+                    </td>
+                    <td class="px-4 py-2 text-sm text-slate-600 font-medium">
+                      ${{ subtotalDetalleEntrada(detalle).toFixed(2) }}
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                      <button
+                        type="button"
+                        class="rounded-lg border border-red-200 px-3 py-1 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                        @click="eliminarDetalleEntrada(detalle.id)"
+                      >
+                        Quitar
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="mt-4 flex justify-end">
+            <div class="text-right">
+              <p class="text-sm text-slate-500">
+                Subtotal: ${{ subtotalEntradas.toFixed(2) }}
+              </p>
+              <p class="text-xl font-bold text-green-700">
+                Total: ${{ totalEntradasCalculado.toFixed(2) }}
+              </p>
+            </div>
+          </div>
+
+          <div
+            v-if="formMessage"
+            class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+          >
+            {{ formMessage }}
+          </div>
+
+          <div class="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              class="rounded-xl border border-slate-300 px-4 py-2 hover:bg-slate-100"
+              @click="closeNewEntrada"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="rounded-xl bg-green-600 hover:bg-green-700 px-4 py-2 font-semibold text-white"
+              @click="submitEntrada"
+            >
+              Registrar entrada
+            </button>
+          </div>
+        </div>
+      </div>
+    </teleport>
 
     <!-- Modal de detalle -->
     <teleport to="body">
