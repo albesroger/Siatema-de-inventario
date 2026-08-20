@@ -20,7 +20,9 @@ export const useAuthStore = defineStore("auth", () => {
 
   const initialized = ref(false);
 
-  const isAuthenticated = computed(() => !!token.value);
+  const sessionValid = ref(false);
+
+  const isAuthenticated = computed(() => !!token.value || sessionValid.value);
 
   const isAdmin = computed(() => usuario.value?.rol === "ADMINISTRADOR");
 
@@ -36,9 +38,6 @@ export const useAuthStore = defineStore("auth", () => {
 
   const login = async (credentials: LoginRequest) => {
     const { $api } = useNuxtApp();
-    const tokenCookie = useCookie<string | null>("token", {
-      sameSite: "lax",
-    });
 
     const response = await $api<{
       success: boolean;
@@ -50,26 +49,19 @@ export const useAuthStore = defineStore("auth", () => {
 
     token.value = response.data.token;
     usuario.value = response.data.usuario;
-    tokenCookie.value = response.data.token;
-
-    if (import.meta.client) {
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("usuario", JSON.stringify(response.data.usuario));
-    }
+    sessionValid.value = true;
   };
 
-  const logout = () => {
-    const tokenCookie = useCookie<string | null>("token", {
-      sameSite: "lax",
-    });
-
+  const logout = async () => {
     token.value = null;
     usuario.value = null;
-    tokenCookie.value = null;
+    sessionValid.value = false;
 
-    if (import.meta.client) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("usuario");
+    try {
+      const { $api } = useNuxtApp();
+      await $api("/auth/logout", { method: "POST" });
+    } catch {
+      /* sin red o sin sesión activa */
     }
 
     navigateTo("/login");
@@ -78,7 +70,7 @@ export const useAuthStore = defineStore("auth", () => {
   const verificarExpiracion = () => {
     if (!import.meta.client) return;
 
-    const tokenActual = token.value || localStorage.getItem("token");
+    const tokenActual = token.value;
     if (!tokenActual) return;
 
     const decoded = decodificarJwt(tokenActual);
@@ -97,36 +89,35 @@ export const useAuthStore = defineStore("auth", () => {
     }, tiempoRestante * 1000);
   };
 
-  const cargarSesion = () => {
+  const cargarSesion = async () => {
     if (initialized.value) return;
-
-    const tokenCookie = useCookie<string | null>("token", {
-      sameSite: "lax",
-    });
-
-    if (tokenCookie.value) {
-      token.value = tokenCookie.value;
-    }
 
     if (import.meta.server) {
       initialized.value = true;
       return;
     }
 
-    const storedToken = localStorage.getItem("token");
-    const storedUsuario = localStorage.getItem("usuario");
-
-    if (storedToken) {
-      token.value = storedToken;
+    if (token.value) {
+      initialized.value = true;
+      verificarExpiracion();
+      return;
     }
 
-    if (storedUsuario) {
-      usuario.value = JSON.parse(storedUsuario);
+    try {
+      const { $api } = useNuxtApp();
+      const response = await $api<{
+        success: boolean;
+        data: Usuario;
+      }>("/auth/me");
+
+      usuario.value = response.data;
+      sessionValid.value = true;
+    } catch {
+      usuario.value = null;
+      sessionValid.value = false;
     }
 
     initialized.value = true;
-
-    verificarExpiracion();
   };
 
   return {
@@ -136,6 +127,7 @@ export const useAuthStore = defineStore("auth", () => {
     isAdmin,
     negocioNombre,
     initialized,
+    sessionValid,
     login,
     logout,
     cargarSesion,

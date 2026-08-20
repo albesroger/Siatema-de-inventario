@@ -15,9 +15,17 @@ import cors from "cors";
 
 const app = express();
 
+const allowedOrigins = (
+  process.env.CORS_ORIGIN || "http://localhost:3001"
+)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: "http://localhost:3001",
+    origin: allowedOrigins,
+    credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),

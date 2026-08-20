@@ -3,6 +3,42 @@ import { prisma } from "../config/database.js";
 import { generarToken } from "../config/jwt.js";
 import { LoginInput } from "../schemas/auth.schema.js";
 
+export const me = async (usuarioId: string, negocioId: string) => {
+  const usuario = await prisma.usuario.findFirst({
+    where: {
+      id: usuarioId,
+      negocioId,
+      estado: "ACTIVO",
+    },
+    include: {
+      negocio: {
+        select: {
+          id: true,
+          nombre: true,
+          nombre_comercial: true,
+        },
+      },
+    },
+  });
+
+  if (!usuario) {
+    return null;
+  }
+
+  return {
+    id: usuario.id,
+    nombre: usuario.nombre,
+    username: usuario.username,
+    rol: usuario.rol,
+    negocioId: usuario.negocioId,
+    negocio: {
+      id: usuario.negocio.id,
+      nombre: usuario.negocio.nombre,
+      nombreComercial: usuario.negocio.nombre_comercial,
+    },
+  };
+};
+
 export const login = async (data: LoginInput) => {
   // ========================================================
   // 1. BUSCAR USUARIO
