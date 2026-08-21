@@ -1,3 +1,4 @@
+import { mensajeSeguro } from "../utils/errores.js";
 import { Response } from "express";
 import ventaService from "../services/venta.service.js";
 import { serializeBigInt } from "../utils/bigint.js";
@@ -30,7 +31,7 @@ export class VentaController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error ? error.message : "Error al crear la venta",
+          mensajeSeguro(error, "Error al crear la venta"),
       });
     }
   }
@@ -56,9 +57,7 @@ export class VentaController {
       return res.status(500).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener las ventas",
+          mensajeSeguro(error, "Error al obtener las ventas"),
       });
     }
   }
@@ -96,7 +95,7 @@ export class VentaController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error ? error.message : "Error al obtener la venta",
+          mensajeSeguro(error, "Error al obtener la venta"),
       });
     }
   }
@@ -137,7 +136,7 @@ export class VentaController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error ? error.message : "Error al anular la venta",
+          mensajeSeguro(error, "Error al anular la venta"),
       });
     }
   }

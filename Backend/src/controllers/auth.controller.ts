@@ -1,3 +1,4 @@
+import { mensajeSeguro } from "../utils/errores.js";
 import { Request, Response } from "express";
 import * as authService from "../services/auth.service.js";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
@@ -45,7 +46,7 @@ export const login = async (req: Request, res: Response) => {
     return res.status(401).json({
       success: false,
       message:
-        error instanceof Error ? error.message : "Error al iniciar sesión",
+        mensajeSeguro(error, "Error al iniciar sesión"),
     });
   }
 };

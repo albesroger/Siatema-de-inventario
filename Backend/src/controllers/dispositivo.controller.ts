@@ -1,3 +1,4 @@
+import { mensajeSeguro } from "../utils/errores.js";
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 import { DispositivoService } from "../services/dispositivo.service.js";
@@ -27,9 +28,7 @@ export class DispositivoController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al crear el dispositivo",
+          mensajeSeguro(error, "Error al crear el dispositivo"),
       });
     }
   }
@@ -55,9 +54,7 @@ export class DispositivoController {
       return res.status(500).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener los dispositivos",
+          mensajeSeguro(error, "Error al obtener los dispositivos"),
       });
     }
   }
@@ -100,9 +97,7 @@ export class DispositivoController {
       return res.status(500).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener el dispositivo",
+          mensajeSeguro(error, "Error al obtener el dispositivo"),
       });
     }
   }
@@ -139,9 +134,7 @@ export class DispositivoController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al actualizar el dispositivo",
+          mensajeSeguro(error, "Error al actualizar el dispositivo"),
       });
     }
   }
@@ -177,9 +170,7 @@ export class DispositivoController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al eliminar el dispositivo",
+          mensajeSeguro(error, "Error al eliminar el dispositivo"),
       });
     }
   }

@@ -12,8 +12,11 @@ import ventaRoutes from "./routes/venta.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import usuarioRoutes from "./routes/usuario.routes.js";
 import cors from "cors";
+import helmet from "helmet";
 
 const app = express();
+
+app.use(helmet());
 
 const allowedOrigins = (
   process.env.CORS_ORIGIN || "http://localhost:3001"
@@ -31,7 +34,7 @@ app.use(
   }),
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
 app.use("/api/productos", productoRoutes);
 
@@ -63,5 +66,39 @@ app.get("/api/health", (_req, res) => {
     message: "Servidor funcionando correctamente",
   });
 });
+
+// Middleware global de errores: última barrera para no filtrar
+// detalles internos al cliente.
+app.use(
+  (
+    error: unknown,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction,
+  ) => {
+    console.error("Error no controlado:", error);
+
+    if (res.headersSent) {
+      return;
+    }
+
+    const candidato = error as { status?: unknown; statusCode?: unknown };
+
+    const status =
+      (typeof candidato?.status === "number" && candidato.status) ||
+      (typeof candidato?.statusCode === "number" && candidato.statusCode) ||
+      500;
+
+    res
+      .status(status >= 400 && status < 600 ? status : 500)
+      .json({
+        success: false,
+        message:
+          status === 413
+            ? "El cuerpo de la solicitud es demasiado grande"
+            : "Error interno del servidor",
+      });
+  },
+);
 
 export default app;

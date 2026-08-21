@@ -1,3 +1,4 @@
+import { mensajeSeguro } from "../utils/errores.js";
 import { Response } from "express";
 
 import { AuthRequest } from "../middlewares/auth.middleware.js";
@@ -31,9 +32,7 @@ export class MovimientoController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener los movimientos",
+          mensajeSeguro(error, "Error al obtener los movimientos"),
       });
     }
   }

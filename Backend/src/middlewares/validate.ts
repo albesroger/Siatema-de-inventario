@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 
-import { ZodSchema } from "zod";
+import { z, ZodSchema } from "zod";
 
 export const validate = (schema: ZodSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -18,6 +18,25 @@ export const validate = (schema: ZodSchema) => {
     }
 
     req.body = result.data;
+
+    next();
+  };
+};
+
+/**
+ * Validador para router.param(): exige que el parámetro de ruta
+ * indicado sea un UUID válido antes de llegar al controlador.
+ */
+export const validarParamId = (param = "id") => {
+  return (req: Request, res: Response, next: NextFunction, value: string) => {
+    const result = z.string().uuid().safeParse(value);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: `El parámetro '${param}' debe ser un UUID válido`,
+      });
+    }
 
     next();
   };

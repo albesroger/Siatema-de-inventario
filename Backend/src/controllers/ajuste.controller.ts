@@ -1,3 +1,4 @@
+import { mensajeSeguro } from "../utils/errores.js";
 import { Response } from "express";
 
 import { AuthRequest } from "../middlewares/auth.middleware.js";
@@ -49,7 +50,7 @@ export class AjusteController {
         success: false,
 
         message:
-          error instanceof Error ? error.message : "Error al crear el ajuste",
+          mensajeSeguro(error, "Error al crear el ajuste"),
       });
     }
   }
@@ -79,7 +80,7 @@ export class AjusteController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error ? error.message : "Error al listar ajustes",
+          mensajeSeguro(error, "Error al listar ajustes"),
       });
     }
   }

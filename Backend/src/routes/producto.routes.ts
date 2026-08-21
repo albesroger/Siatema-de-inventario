@@ -4,11 +4,13 @@ import {
   crearProductoSchema,
   actualizarProductoSchema,
 } from "../schemas/producto.schema.js";
-import { validate } from "../middlewares/validate.js";
+import { validate, validarParamId } from "../middlewares/validate.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { authorize } from "../middlewares/role.middleware.js";
 
 const router = Router();
+
+router.param("id", validarParamId());
 const controller = new ProductoController();
 
 router.post(

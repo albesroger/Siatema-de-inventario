@@ -1,3 +1,4 @@
+import { mensajeSeguro } from "../utils/errores.js";
 import { Response } from "express";
 
 import { AuthRequest } from "../middlewares/auth.middleware.js";
@@ -35,7 +36,7 @@ export class ProductoController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error ? error.message : "Error al crear el producto",
+          mensajeSeguro(error, "Error al crear el producto"),
       });
     }
   }
@@ -65,9 +66,7 @@ export class ProductoController {
       return res.status(500).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener los productos",
+          mensajeSeguro(error, "Error al obtener los productos"),
       });
     }
   }
@@ -116,9 +115,7 @@ export class ProductoController {
       return res.status(500).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener el producto",
+          mensajeSeguro(error, "Error al obtener el producto"),
       });
     }
   }
@@ -161,9 +158,7 @@ export class ProductoController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al actualizar el producto",
+          mensajeSeguro(error, "Error al actualizar el producto"),
       });
     }
   }
@@ -202,9 +197,7 @@ export class ProductoController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al eliminar el producto",
+          mensajeSeguro(error, "Error al eliminar el producto"),
       });
     }
   }

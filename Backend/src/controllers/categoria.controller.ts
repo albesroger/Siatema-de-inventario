@@ -1,3 +1,4 @@
+import { mensajeSeguro } from "../utils/errores.js";
 import { Response } from "express";
 
 import { AuthRequest } from "../middlewares/auth.middleware.js";
@@ -32,9 +33,7 @@ export class CategoriaController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al crear la categoría",
+          mensajeSeguro(error, "Error al crear la categoría"),
       });
     }
   }
@@ -64,9 +63,7 @@ export class CategoriaController {
       return res.status(500).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener las categorías",
+          mensajeSeguro(error, "Error al obtener las categorías"),
       });
     }
   }
@@ -113,9 +110,7 @@ export class CategoriaController {
       return res.status(500).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener la categoría",
+          mensajeSeguro(error, "Error al obtener la categoría"),
       });
     }
   }
@@ -156,9 +151,7 @@ export class CategoriaController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al actualizar la categoría",
+          mensajeSeguro(error, "Error al actualizar la categoría"),
       });
     }
   }
@@ -195,9 +188,7 @@ export class CategoriaController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al eliminar la categoría",
+          mensajeSeguro(error, "Error al eliminar la categoría"),
       });
     }
   }

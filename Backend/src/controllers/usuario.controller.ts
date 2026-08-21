@@ -1,3 +1,4 @@
+import { mensajeSeguro } from "../utils/errores.js";
 import { Response } from "express";
 import * as usuarioService from "../services/usuario.service.js";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
@@ -25,7 +26,7 @@ export const crear = async (req: AuthRequest, res: Response) => {
     return res.status(400).json({
       success: false,
       message:
-        error instanceof Error ? error.message : "Error al crear usuario",
+        mensajeSeguro(error, "Error al crear usuario"),
     });
   }
 };
@@ -49,7 +50,7 @@ export const listar = async (req: AuthRequest, res: Response) => {
     return res.status(400).json({
       success: false,
       message:
-        error instanceof Error ? error.message : "Error al listar usuarios",
+        mensajeSeguro(error, "Error al listar usuarios"),
     });
   }
 };
@@ -77,7 +78,7 @@ export const obtenerPorId = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     return res.status(404).json({
       success: false,
-      message: error instanceof Error ? error.message : "Usuario no encontrado",
+      message: mensajeSeguro(error, "Usuario no encontrado"),
     });
   }
 };

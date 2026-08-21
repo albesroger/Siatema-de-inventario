@@ -1,3 +1,4 @@
+import { mensajeSeguro } from "../utils/errores.js";
 import { Response } from "express";
 
 import { AuthRequest } from "../middlewares/auth.middleware.js";
@@ -32,9 +33,7 @@ export class ProveedorController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al crear el proveedor",
+          mensajeSeguro(error, "Error al crear el proveedor"),
       });
     }
   }
@@ -64,9 +63,7 @@ export class ProveedorController {
       return res.status(500).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener los proveedores",
+          mensajeSeguro(error, "Error al obtener los proveedores"),
       });
     }
   }
@@ -113,9 +110,7 @@ export class ProveedorController {
       return res.status(500).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener el proveedor",
+          mensajeSeguro(error, "Error al obtener el proveedor"),
       });
     }
   }
@@ -156,9 +151,7 @@ export class ProveedorController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al actualizar el proveedor",
+          mensajeSeguro(error, "Error al actualizar el proveedor"),
       });
     }
   }
@@ -195,9 +188,7 @@ export class ProveedorController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al eliminar el proveedor",
+          mensajeSeguro(error, "Error al eliminar el proveedor"),
       });
     }
   }

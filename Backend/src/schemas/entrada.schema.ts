@@ -33,3 +33,7 @@ export const crearEntradaSchema = z.object({
     .array(detalleEntradaSchema)
     .min(1, "La entrada debe contener al menos un producto"),
 });
+
+export const anularEntradaSchema = z.object({
+  dispositivoId: z.string().uuid("El dispositivoId no es válido"),
+});

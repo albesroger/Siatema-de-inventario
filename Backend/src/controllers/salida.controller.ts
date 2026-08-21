@@ -1,3 +1,4 @@
+import { mensajeSeguro } from "../utils/errores.js";
 import { Response } from "express";
 
 import { AuthRequest } from "../middlewares/auth.middleware.js";
@@ -37,9 +38,7 @@ export class SalidaController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al registrar la salida",
+          mensajeSeguro(error, "Error al registrar la salida"),
       });
     }
   }
@@ -71,9 +70,7 @@ export class SalidaController {
       return res.status(500).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener las salidas",
+          mensajeSeguro(error, "Error al obtener las salidas"),
       });
     }
   }
@@ -117,7 +114,7 @@ export class SalidaController {
       return res.status(404).json({
         success: false,
         message:
-          error instanceof Error ? error.message : "Salida no encontrada",
+          mensajeSeguro(error, "Salida no encontrada"),
       });
     }
   }
@@ -181,9 +178,7 @@ export class SalidaController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "No se pudo anular la salida",
+          mensajeSeguro(error, "No se pudo anular la salida"),
       });
     }
   }

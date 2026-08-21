@@ -1,3 +1,4 @@
+import { mensajeSeguro } from "../utils/errores.js";
 import { Response } from "express";
 
 import { AuthRequest } from "../middlewares/auth.middleware.js";
@@ -33,9 +34,7 @@ export class EntradaController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al registrar la entrada",
+          mensajeSeguro(error, "Error al registrar la entrada"),
       });
     }
   }
@@ -63,9 +62,7 @@ export class EntradaController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Error al obtener las entradas",
+          mensajeSeguro(error, "Error al obtener las entradas"),
       });
     }
   }
@@ -102,7 +99,7 @@ export class EntradaController {
       return res.status(404).json({
         success: false,
         message:
-          error instanceof Error ? error.message : "Entrada no encontrada",
+          mensajeSeguro(error, "Entrada no encontrada"),
       });
     }
   }
@@ -152,9 +149,7 @@ export class EntradaController {
       return res.status(400).json({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "No se pudo anular la entrada",
+          mensajeSeguro(error, "No se pudo anular la entrada"),
       });
     }
   }

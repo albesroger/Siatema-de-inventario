@@ -6,9 +6,11 @@ import {
   anularSalidaSchema,
 } from "../schemas/salida.schema.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
-import { validate } from "../middlewares/validate.js";
+import { validate, validarParamId } from "../middlewares/validate.js";
 
 const router = Router();
+
+router.param("id", validarParamId());
 
 const controller = new SalidaController();
 

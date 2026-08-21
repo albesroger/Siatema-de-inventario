@@ -1,6 +1,6 @@
 import { Router } from "express";
 import ventaController from "../controllers/venta.controller.js";
-import { validate } from "../middlewares/validate.js";
+import { validate, validarParamId } from "../middlewares/validate.js";
 import {
   crearVentaSchema,
   anularVentaSchema,
@@ -8,6 +8,8 @@ import {
 import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = Router();
+
+router.param("id", validarParamId());
 router.use(authenticate);
 
 router.post("/", validate(crearVentaSchema), ventaController.crear);
