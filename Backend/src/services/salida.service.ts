@@ -1,4 +1,6 @@
+import { Prisma } from "../generated/prisma/client";
 import { prisma } from "../config/database.js";
+import { transaccionSerializada } from "../utils/transaccion.js";
 
 interface DetalleSalidaDTO {
   productoId: string;
@@ -33,7 +35,7 @@ export class SalidaService {
     negocioId: string,
     usuarioId: string,
   ) {
-    return prisma.$transaction(async (tx) => {
+    return transaccionSerializada(async (tx) => {
       // =========================================
       // 1. VALIDAR NEGOCIO
       // =========================================
@@ -132,11 +134,11 @@ export class SalidaService {
           throw new Error("Producto no encontrado");
         }
 
-        const stockActual = Number(producto.stockActual);
+        const cantidad = new Prisma.Decimal(detalle.cantidad);
 
-        if (detalle.cantidad > stockActual) {
+        if (cantidad.greaterThan(producto.stockActual)) {
           throw new Error(
-            `Stock insuficiente para ${producto.nombre}. Disponible: ${stockActual}`,
+            `Stock insuficiente para ${producto.nombre}. Disponible: ${producto.stockActual.toString()}`,
           );
         }
       }
@@ -178,11 +180,11 @@ export class SalidaService {
           throw new Error(`Producto ${detalle.productoId} no encontrado`);
         }
 
-        const stockAnterior = Number(producto.stockActual);
+        const stockAnterior = producto.stockActual;
 
-        const cantidad = detalle.cantidad;
+        const cantidad = new Prisma.Decimal(detalle.cantidad);
 
-        const stockPosterior = stockAnterior - cantidad;
+        const stockPosterior = stockAnterior.sub(cantidad);
 
         // =======================================
         // 9. CREAR DETALLE
@@ -201,17 +203,24 @@ export class SalidaService {
         });
 
         // =======================================
-        // 10. ACTUALIZAR STOCK
+        // 10. ACTUALIZAR STOCK (atómico y condicional)
         // =======================================
 
-        await tx.producto.update({
+        const actualizado = await tx.producto.updateMany({
           where: {
             id: producto.id,
+            stockActual: { gte: cantidad },
           },
           data: {
-            stockActual: stockPosterior,
+            stockActual: { decrement: cantidad },
           },
         });
+
+        if (actualizado.count === 0) {
+          throw new Error(
+            `Stock insuficiente para ${producto.nombre}. Disponible: ${stockAnterior.toString()}`,
+          );
+        }
 
         // =======================================
         // 11. REGISTRAR MOVIMIENTO
@@ -372,7 +381,7 @@ export class SalidaService {
     usuarioId: string,
     dispositivoId: string,
   ) {
-    return prisma.$transaction(async (tx) => {
+    return transaccionSerializada(async (tx) => {
       // =========================================
       // 1. BUSCAR SALIDA
       // =========================================
@@ -451,14 +460,14 @@ export class SalidaService {
           throw new Error(`El producto ${detalle.productoId} no existe`);
         }
 
-        const stockAnterior = Number(producto.stockActual);
+        const stockAnterior = producto.stockActual;
 
-        const cantidad = Number(detalle.cantidad);
+        const cantidad = detalle.cantidad;
 
-        const stockPosterior = stockAnterior + cantidad;
+        const stockPosterior = stockAnterior.add(cantidad);
 
         // =======================================
-        // 6. ACTUALIZAR STOCK
+        // 6. ACTUALIZAR STOCK (atómico)
         // =======================================
 
         await tx.producto.update({
@@ -467,7 +476,7 @@ export class SalidaService {
           },
 
           data: {
-            stockActual: stockPosterior,
+            stockActual: { increment: cantidad },
           },
         });
 

@@ -2,6 +2,7 @@ import { Prisma } from "../generated/prisma/client";
 import { prisma } from "../config/database.js";
 
 import { CrearVentaInput, AnularVentaInput } from "../schemas/venta.schema.js";
+import { transaccionSerializada } from "../utils/transaccion.js";
 
 export class VentaService {
   async crearVenta(
@@ -9,7 +10,7 @@ export class VentaService {
     usuarioId: string,
     negocioId: string,
   ) {
-    return prisma.$transaction(async (tx) => {
+    return transaccionSerializada(async (tx) => {
       // ========================================================
       // 1. VALIDAR USUARIO
       // ========================================================
@@ -235,17 +236,24 @@ export class VentaService {
         });
 
         // ------------------------------------------------------
-        // ACTUALIZAR STOCK
+        // ACTUALIZAR STOCK (atómico y condicional: nunca negativo)
         // ------------------------------------------------------
 
-        await tx.producto.update({
+        const actualizado = await tx.producto.updateMany({
           where: {
             id: producto.id,
+            stockActual: { gte: detalle.cantidad },
           },
           data: {
-            stockActual: stockPosterior,
+            stockActual: { decrement: detalle.cantidad },
           },
         });
+
+        if (actualizado.count === 0) {
+          throw new Error(
+            `Stock insuficiente para "${producto.nombre}". Stock disponible: ${stockAnterior.toString()}`,
+          );
+        }
 
         // ------------------------------------------------------
         // REGISTRAR MOVIMIENTO
@@ -367,7 +375,7 @@ export class VentaService {
     usuarioId: string,
     negocioId: string,
   ) {
-    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    return transaccionSerializada(async (tx: Prisma.TransactionClient) => {
       // ========================================================
       // 1. BUSCAR VENTA
       // ========================================================
@@ -418,7 +426,7 @@ export class VentaService {
             id: producto.id,
           },
           data: {
-            stockActual: stockPosterior,
+            stockActual: { increment: detalle.cantidad },
           },
         });
 

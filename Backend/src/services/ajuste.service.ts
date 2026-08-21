@@ -1,6 +1,8 @@
+import { Prisma } from "../generated/prisma/client";
 import { prisma } from "../config/database.js";
 
 import { CrearAjusteDTO } from "../schemas/ajuste.schema.js";
+import { transaccionSerializada } from "../utils/transaccion.js";
 
 export class AjusteService {
   async crear(
@@ -8,7 +10,7 @@ export class AjusteService {
     negocioId: string,
     usuarioId: string,
   ) {
-    return prisma.$transaction(async (tx) => {
+    return transaccionSerializada(async (tx) => {
       // =================================================
       // 1. VALIDAR NEGOCIO
       // =================================================
@@ -135,28 +137,28 @@ export class AjusteService {
         // STOCK ACTUAL
         // ===============================================
 
-        const stockAnterior = Number(producto.stockActual);
+        const stockAnterior = producto.stockActual;
 
-        const cantidad = detalle.cantidad;
+        const cantidad = new Prisma.Decimal(detalle.cantidad);
 
         // ===============================================
         // CALCULAR STOCK NUEVO
         // ===============================================
 
-        let stockNuevo: number;
+        let stockNuevo: Prisma.Decimal;
 
         if (data.tipo === "POSITIVO") {
-          stockNuevo = stockAnterior + cantidad;
+          stockNuevo = stockAnterior.add(cantidad);
         } else {
-          stockNuevo = stockAnterior - cantidad;
+          stockNuevo = stockAnterior.sub(cantidad);
 
           // =============================================
           // NO PERMITIR STOCK NEGATIVO
           // =============================================
 
-          if (stockNuevo < 0) {
+          if (stockNuevo.lessThan(0)) {
             throw new Error(
-              `Stock insuficiente para ${producto.nombre}. Stock actual: ${stockAnterior}`,
+              `Stock insuficiente para ${producto.nombre}. Stock actual: ${stockAnterior.toString()}`,
             );
           }
         }
@@ -182,18 +184,29 @@ export class AjusteService {
         });
 
         // ===============================================
-        // ACTUALIZAR PRODUCTO
+        // ACTUALIZAR PRODUCTO (atómico y condicional)
         // ===============================================
 
-        await tx.producto.update({
-          where: {
-            id: producto.id,
-          },
+        if (data.tipo === "POSITIVO") {
+          await tx.producto.update({
+            where: { id: producto.id },
+            data: { stockActual: { increment: cantidad } },
+          });
+        } else {
+          const actualizado = await tx.producto.updateMany({
+            where: {
+              id: producto.id,
+              stockActual: { gte: cantidad },
+            },
+            data: { stockActual: { decrement: cantidad } },
+          });
 
-          data: {
-            stockActual: stockNuevo,
-          },
-        });
+          if (actualizado.count === 0) {
+            throw new Error(
+              `Stock insuficiente para ${producto.nombre}. Stock actual: ${stockAnterior.toString()}`,
+            );
+          }
+        }
 
         // ===============================================
         // TIPO DE MOVIMIENTO

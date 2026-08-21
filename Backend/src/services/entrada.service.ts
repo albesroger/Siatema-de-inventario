@@ -1,4 +1,6 @@
+import { Prisma } from "../generated/prisma/client";
 import { prisma } from "../config/database.js";
+import { transaccionSerializada } from "../utils/transaccion.js";
 
 interface DetalleEntradaDTO {
   productoId: string;
@@ -18,7 +20,7 @@ interface CrearEntradaDTO {
 
 export class EntradaService {
   async crear(data: CrearEntradaDTO, usuarioId: string, negocioId: string) {
-    return prisma.$transaction(async (tx) => {
+    return transaccionSerializada(async (tx) => {
       // =========================================
       // 1. VALIDAR NEGOCIO
       // =========================================
@@ -130,19 +132,20 @@ export class EntradaService {
       // 7. CALCULAR TOTALES
       // =========================================
 
-      let subtotal = 0;
+      let subtotal = new Prisma.Decimal(0);
 
       const detallesCalculados = data.detalles.map((detalle) => {
-        const subtotalDetalle =
-          detalle.cantidad * detalle.costoUnitario - detalle.descuento;
+        const subtotalDetalle = new Prisma.Decimal(detalle.cantidad)
+          .mul(detalle.costoUnitario)
+          .sub(detalle.descuento);
 
-        if (subtotalDetalle < 0) {
+        if (subtotalDetalle.lessThan(0)) {
           throw new Error(
             "El descuento de un detalle no puede superar su subtotal",
           );
         }
 
-        subtotal += subtotalDetalle;
+        subtotal = subtotal.add(subtotalDetalle);
 
         return {
           ...detalle,
@@ -150,9 +153,11 @@ export class EntradaService {
         };
       });
 
-      const total = subtotal - data.descuento;
+      const descuentoGeneral = new Prisma.Decimal(data.descuento);
 
-      if (total < 0) {
+      const total = subtotal.sub(descuentoGeneral);
+
+      if (total.lessThan(0)) {
         throw new Error("El descuento general no puede superar el subtotal");
       }
 
@@ -172,7 +177,7 @@ export class EntradaService {
           numeroDocumento: data.numeroDocumento,
 
           subtotal,
-          descuento: data.descuento,
+          descuento: descuentoGeneral,
           total,
 
           observaciones: data.observaciones,
@@ -196,9 +201,11 @@ export class EntradaService {
           throw new Error(`Producto ${detalle.productoId} no encontrado`);
         }
 
-        const stockAnterior = Number(producto.stockActual);
+        const cantidad = new Prisma.Decimal(detalle.cantidad);
 
-        const stockPosterior = stockAnterior + detalle.cantidad;
+        const stockAnterior = producto.stockActual;
+
+        const stockPosterior = stockAnterior.add(cantidad);
 
         // =====================================
         // 10. CREAR DETALLE
@@ -209,7 +216,7 @@ export class EntradaService {
             entradaId: entrada.id,
             productoId: detalle.productoId,
 
-            cantidad: detalle.cantidad,
+            cantidad,
 
             costoUnitario: detalle.costoUnitario,
 
@@ -220,7 +227,7 @@ export class EntradaService {
         });
 
         // =====================================
-        // 11. ACTUALIZAR STOCK
+        // 11. ACTUALIZAR STOCK (atómico)
         // =====================================
 
         await tx.producto.update({
@@ -228,7 +235,7 @@ export class EntradaService {
             id: detalle.productoId,
           },
           data: {
-            stockActual: stockPosterior,
+            stockActual: { increment: cantidad },
             precioCompra: detalle.costoUnitario,
           },
         });
@@ -373,7 +380,7 @@ export class EntradaService {
     negocioId: string,
     dispositivoId: string,
   ) {
-    return prisma.$transaction(async (tx) => {
+    return transaccionSerializada(async (tx) => {
       // =========================================
       // 1. BUSCAR LA ENTRADA
       // =========================================
@@ -451,17 +458,17 @@ export class EntradaService {
           throw new Error(`El producto ${detalle.productoId} no existe`);
         }
 
-        const stockAnterior = Number(producto.stockActual);
+        const stockAnterior = producto.stockActual;
 
-        const cantidad = Number(detalle.cantidad);
+        const cantidad = detalle.cantidad;
 
-        const stockPosterior = stockAnterior - cantidad;
+        const stockPosterior = stockAnterior.sub(cantidad);
 
         // =======================================
-        // 6. EVITAR STOCK NEGATIVO
+        // 6. EVITAR STOCK NEGATIVO (atómico)
         // =======================================
 
-        if (stockPosterior < 0) {
+        if (stockPosterior.lessThan(0)) {
           throw new Error(
             `No se puede anular la entrada porque el producto ${producto.nombre} ya no tiene suficiente stock`,
           );
@@ -471,14 +478,21 @@ export class EntradaService {
         // 7. ACTUALIZAR STOCK
         // =======================================
 
-        await tx.producto.update({
+        const actualizado = await tx.producto.updateMany({
           where: {
             id: producto.id,
+            stockActual: { gte: cantidad },
           },
           data: {
-            stockActual: stockPosterior,
+            stockActual: { decrement: cantidad },
           },
         });
+
+        if (actualizado.count === 0) {
+          throw new Error(
+            `No se puede anular la entrada porque el producto ${producto.nombre} ya no tiene suficiente stock`,
+          );
+        }
 
         // =======================================
         // 8. CREAR MOVIMIENTO INVERSO
