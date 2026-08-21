@@ -126,8 +126,12 @@ API ENDPOINTS
 
 CREDENCIALES POR DEFECTO
 ------------------------
-Usuario: admin
-Contraseña: 123456
+El seed crea el usuario "admin" solo si no existe:
+- Si defines SEED_ADMIN_PASSWORD en Backend/.env, esa será su contraseña.
+- Si no, se genera una aleatoria y se muestra una sola vez al ejecutarlo.
+
+NOTA: el seed nunca modifica la contraseña de un admin existente.
+Cambia las credenciales por defecto antes de pasar a producción.
 
 NOTAS
 -----

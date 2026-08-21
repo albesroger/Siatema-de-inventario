@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { prisma } from "../src/config/database.js";
 
 const main = async () => {
@@ -8,8 +9,6 @@ const main = async () => {
     throw new Error("No existe ningún negocio. Crea primero un negocio.");
   }
 
-  const passwordHash = await bcrypt.hash("123456", 12);
-
   const usuarioExistente = await prisma.usuario.findFirst({
     where: {
       negocioId: negocio.id,
@@ -18,23 +17,15 @@ const main = async () => {
   });
 
   if (usuarioExistente) {
-    const passwordHash = await bcrypt.hash("123456", 12);
-
-    await prisma.usuario.update({
-      where: {
-        id: usuarioExistente.id,
-      },
-      data: {
-        passwordHash,
-        estado: "ACTIVO",
-        rol: "ADMINISTRADOR",
-      },
-    });
-
-    console.log("Usuario admin actualizado correctamente");
-
+    console.log("El usuario admin ya existe; no se modifica su contraseña.");
     return;
   }
+
+  const password =
+    process.env.SEED_ADMIN_PASSWORD ||
+    crypto.randomBytes(12).toString("base64url");
+
+  const passwordHash = await bcrypt.hash(password, 12);
 
   const usuario = await prisma.usuario.create({
     data: {
@@ -48,6 +39,13 @@ const main = async () => {
   });
 
   console.log(`Usuario creado: ${usuario.username}`);
+
+  if (process.env.SEED_ADMIN_PASSWORD) {
+    console.log("Contraseña definida mediante SEED_ADMIN_PASSWORD.");
+  } else {
+    console.log(`Contraseña generada: ${password}`);
+    console.log("Guárdala ahora: no se volverá a mostrar ni a restablecer.");
+  }
 };
 
 main()
