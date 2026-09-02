@@ -21,12 +21,15 @@ const esConflictoSerializacion = (error: unknown): boolean => {
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Ejecuta una transacción con aislamiento SERIALIZABLE y reintenta
- * automáticamente ante conflictos de serialización (P2034).
+ * Ejecuta una transacción y reintenta automáticamente ante conflictos
+ * de serialización (P2034).
  *
  * Esto evita:
  * - Condiciones de carrera (TOCTOU) al validar y actualizar stock.
  * - Colisiones en la generación de números de documento concurrentes.
+ *
+ * Nota: SQLite escribe de forma estrictamente serializada, por lo que
+ * no se especifica un isolation level explícito.
  */
 export const transaccionSerializada = async <T>(
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
@@ -36,9 +39,7 @@ export const transaccionSerializada = async <T>(
 
   for (let intento = 1; intento <= intentosMaximos; intento++) {
     try {
-      return await prisma.$transaction(fn, {
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-      });
+      return await prisma.$transaction(fn);
     } catch (error) {
       ultimoError = error;
 

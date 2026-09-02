@@ -1,0 +1,21 @@
+# Dependencias
+node_modules/
+
+# Builds
+release/
+dist/
+frontend/.output/
+frontend/node_modules/.cache/
+
+# Base de datos local
+Backend/dev.db
+Backend/db/inventario.db
+*.sqlite
+*.sqlite3
+
+# Entorno
+.env
+.env.local
+
+# Sistema
+.DS_Store

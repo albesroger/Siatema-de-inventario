@@ -1,5 +1,4 @@
 import { prisma } from "../config/database.js";
-import type { unidad_medida } from "../generated/prisma/enums.js";
 
 interface CrearProductoDTO {
   categoriaId: string;
@@ -7,7 +6,7 @@ interface CrearProductoDTO {
   codigoBarras?: string;
   nombre: string;
   descripcion?: string;
-  unidadMedida: unidad_medida;
+  unidadMedida: string;
   precioCompra: number;
   precioVenta: number;
   stockMinimo?: number;

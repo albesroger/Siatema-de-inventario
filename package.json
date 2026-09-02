@@ -1,0 +1,60 @@
+{
+  "name": "sistema-inventario-desktop",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión de Inventario - aplicación de escritorio (Windows)",
+  "main": "electron/main.js",
+  "author": "",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "build:backend": "cd Backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "init:db": "cd Backend && cross-env DATABASE_URL=file:./db/inventario.db SEED_ADMIN_PASSWORD=admin123 npx tsx src/scripts/init-db.ts",
+    "build:app": "npm run build:frontend && npm run build:backend && npm run init:db",
+    "rebuild:native": "electron-rebuild -f -m ./Backend",
+    "electron:dev": "npm run rebuild:native && electron .",
+    "dist": "npm run build:app && electron-builder",
+    "dist:win": "npm run build:app && electron-builder --win"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.2.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.sistema.inventario",
+    "productName": "Sistema de Inventario",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "Backend/dist/**/*",
+      "Backend/node_modules/**/*",
+      "frontend/.output/public/**/*"
+    ],
+    "asarUnpack": [
+      "Backend/node_modules/better-sqlite3/**",
+      "Backend/node_modules/@prisma/adapter-better-sqlite3/**"
+    ],
+    "extraResources": [
+      {
+        "from": "Backend/db/inventario.db",
+        "to": "db/inventario.db"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Sistema de Inventario"
+    }
+  }
+}

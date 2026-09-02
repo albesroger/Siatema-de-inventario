@@ -1,4 +1,6 @@
 import express from "express";
+import path from "path";
+import fs from "fs";
 import productoRoutes from "./routes/producto.routes.js";
 import categoriaRoutes from "./routes/categoria.routes.js";
 import proveedorRoutes from "./routes/proveedor.routes.js";
@@ -16,7 +18,11 @@ import helmet from "helmet";
 
 const app = express();
 
-app.use(helmet());
+// helmet por defecto inyecta Content-Security-Policy que bloquea los
+// scripts inline del build estático de Nuxt (importmap + estado inicial).
+// La app de escritorio es local; desactivamos esa protección para
+// evitar una pantalla en blanco.
+app.use(helmet({ contentSecurityPolicy: false }));
 
 const allowedOrigins = (
   process.env.CORS_ORIGIN || "http://localhost:3001"
@@ -102,3 +108,31 @@ app.use(
 );
 
 export default app;
+
+// ========================================================
+// SERVIDOR ESTÁTICO DEL FRONTEND (modo producción)
+// ========================================================
+
+// En desarrollo el frontend se sirve por separado (nuxt dev).
+// En producción, si existe el build estático del frontend, lo servimos
+// desde el mismo backend para que la app de escritorio lo cargue.
+const publicDir = path.resolve(__dirname, "../../frontend/.output/public");
+
+app.use(express.static(publicDir));
+
+// Fallback SPA: cualquier ruta no-API responde con el index.html del frontend.
+// (app.get("*") no es válido en Express 5: usamos un middleware sin ruta.)
+const indexHtml = path.join(publicDir, "index.html");
+const indexHtmlContent = fs.existsSync(indexHtml)
+  ? fs.readFileSync(indexHtml, "utf-8")
+  : null;
+
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    return next();
+  }
+  if (indexHtmlContent === null || !fs.existsSync(indexHtml)) {
+    return next();
+  }
+  return res.type("html").send(indexHtmlContent);
+});
