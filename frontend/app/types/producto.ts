@@ -101,6 +101,7 @@ export interface Venta {
 export interface ProductoParaVenta {
   id: string;
   codigo: string;
+  codigoBarras?: string | null;
   nombre: string;
   precioVenta: string | number;
   stockActual: string | number;

@@ -190,6 +190,36 @@ NOTAS TÉCNICAS
 - El rebuild nativo (rebuild:native) solo es necesario al instalar
   o actualizar dependencias, no en cada build.
 
+IMPORTANTE (macOS - ABI del módulo nativo):
+  better-sqlite3 necesita compilarse para un ABI distinto según el runtime:
+    - Para desarrollo web (Backend: npm run dev, build:app):
+        cd Backend && npm rebuild better-sqlite3
+    - Para la app de escritorio (Electron: npm run electron:dev):
+        npm run rebuild:native
+  Si al correr el backend ves el error "NODE_MODULE_VERSION" compilado contra
+  otra versión, ejecuta el comando npm rebuild correspondiente.
+
+
+ESCÁNER DE CÓDIGO DE BARRAS
+---------------------------
+El sistema es compatible con escáneres de código de barras USB de tipo
+"teclado" (los que simulan escribir el código más un Enter, sin necesidad
+de drivers ni instalación).
+
+PASO 1 - Cargar el código al producto:
+  En Productos -> Nuevo/Editar producto, existe el campo "Código de barras".
+  Escribe allí el código que está impreso en las etiquetas (ej. 7501234567894)
+  y guarda. Así el sistema vincula el código con el producto.
+
+PASO 2 - Escanear en operación:
+  - Ventas (Punto de venta): en "Nueva venta" hay un campo de escaneo.
+    Al escanear el código, el producto se agrega automáticamente al carrito.
+  - Entradas de inventario: en "Nueva entrada" hay un campo de escaneo.
+    Al escanear el código, el producto se agrega automáticamente al detalle.
+
+Si el código escaneado no coincide con ningún producto, el sistema muestra
+un aviso y no agrega nada.
+
 NOTAS
 -----
 - Los roles de usuario son: ADMINISTRADOR, VENDEDOR

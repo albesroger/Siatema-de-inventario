@@ -139,6 +139,40 @@ const loadProductosEntrada = async () => {
   productosDisponibles.value = response.data.filter((p) => p.estado === "ACTIVO");
 };
 
+// Escáner de código de barras (USB tipo teclado)
+const scanEntradaRef = ref<HTMLInputElement | null>(null);
+
+watch(scanEntradaRef, (el) => {
+  if (el) el.focus();
+});
+
+const scanEntradaInput = ref("");
+const scanEntradaMsg = ref("");
+
+const procesarScanEntrada = () => {
+  const codigo = scanEntradaInput.value.trim();
+  scanEntradaMsg.value = "";
+  if (!codigo) return;
+
+  const producto = productosDisponibles.value.find(
+    (p) =>
+      (p.codigoBarras && p.codigoBarras === codigo) ||
+      p.codigo === codigo
+  );
+
+  if (!producto) {
+    scanEntradaMsg.value = `No se encontró ningún producto con el código: ${codigo}`;
+    scanEntradaInput.value = "";
+    return;
+  }
+
+  productoSeleccionadoId.value = producto.id;
+  cantidadEntrada.value = 1;
+  agregarProductoEntrada();
+  scanEntradaInput.value = "";
+  nextTick(() => scanEntradaRef.value?.focus());
+};
+
 const openNewEntrada = async () => {
   formMessage.value = "";
   detallesEntrada.value = [];
@@ -153,6 +187,7 @@ const openNewEntrada = async () => {
     loadProveedoresEntrada(),
     loadProductosEntrada(),
   ]);
+  nextTick(() => scanEntradaRef.value?.focus());
 };
 
 const closeNewEntrada = () => {
@@ -538,6 +573,27 @@ const submitEntrada = async () => {
 
           <div class="mt-4 rounded-lg border border-slate-200 p-4">
             <p class="text-sm font-semibold text-slate-700 mb-3">Agregar productos</p>
+
+            <div class="mb-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+              <label class="mb-1 block text-xs font-medium text-slate-600"
+                >Escáner de código de barras</label
+              >
+              <input
+                ref="scanEntradaRef"
+                v-model="scanEntradaInput"
+                type="text"
+                :autofocus="true"
+                class="w-full rounded-xl border border-blue-300 px-3 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                placeholder="Escanea un código de barras y presiona Enter..."
+                @keydown.enter="procesarScanEntrada"
+              />
+              <p v-if="scanEntradaMsg" class="mt-1 text-xs text-red-600">
+                {{ scanEntradaMsg }}
+              </p>
+              <p v-else class="mt-1 text-xs text-slate-500">
+                Escanea el código del producto para agregarlo automáticamente al detalle.
+              </p>
+            </div>
 
             <div class="grid gap-3 md:grid-cols-4">
               <div>

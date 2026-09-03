@@ -166,11 +166,59 @@ const loadProductosParaVenta = async () => {
     .map((p) => ({
       id: p.id,
       codigo: p.codigo,
+      codigoBarras: p.codigoBarras,
       nombre: p.nombre,
       precioVenta: p.precioVenta,
       stockActual: p.stockActual,
       unidadMedida: p.unidadMedida,
     }));
+};
+
+// Escáner de código de barras (USB tipo teclado)
+const scanInput = ref("");
+const scanFocus = ref(false);
+const scanInputRef = ref<HTMLInputElement | null>(null);
+
+watch(scanInputRef, (el) => {
+  if (el) {
+    el.focus();
+    el.scrollIntoView({ block: "center" });
+  }
+});
+
+const mantenerFocoScan = () => {
+  nextTick(() => {
+    scanInputRef.value?.focus();
+  });
+};
+
+const procesarScan = () => {
+  const codigo = scanInput.value.trim();
+  if (!codigo) return;
+
+  const producto = productosDisponibles.value.find(
+    (p) =>
+      (p.codigoBarras && p.codigoBarras === codigo) ||
+      p.codigo === codigo
+  );
+
+  if (!producto) {
+    formMessage.value = `No se encontró ningún producto con el código: ${codigo}`;
+    scanInput.value = "";
+    return;
+  }
+
+  productoSeleccionadoId.value = producto.id;
+  cantidadProducto.value = 1;
+  agregarAlCarrito();
+  scanInput.value = "";
+  scanFocus.value = true;
+};
+
+const handleScanInput = () => {
+  if (scanInput.value.includes("\n") || scanInput.value.includes("\r")) {
+    procesarScan();
+  }
 };
 
 const loadDispositivos = async () => {
@@ -189,6 +237,7 @@ const openNewVenta = async () => {
   dispositivoId.value = "";
   showNewVentaModal.value = true;
   await Promise.all([loadProductosParaVenta(), loadDispositivos()]);
+  nextTick(() => scanInputRef.value?.focus());
 };
 
 const closeNewVenta = () => {
@@ -590,6 +639,26 @@ const submitVenta = async () => {
 
           <div class="mt-4 rounded-lg border border-slate-200 p-4">
             <p class="text-sm font-semibold text-slate-700 mb-3">Agregar productos</p>
+
+            <div class="mb-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+              <label class="mb-1 block text-xs font-medium text-slate-600"
+                >Escáner de código de barras</label
+              >
+              <input
+                ref="scanInputRef"
+                v-model="scanInput"
+                type="text"
+                :autofocus="true"
+                class="w-full rounded-xl border border-blue-300 px-3 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                placeholder="Escanea un código de barras y presiona Enter..."
+                @keydown.enter="procesarScan"
+                @input="handleScanInput"
+                @blur="setTimeout(() => (scanFocus = true), 100)"
+              />
+              <p class="mt-1 text-xs text-slate-500">
+                Escanea el código del producto para agregarlo automáticamente al carrito.
+              </p>
+            </div>
 
             <div class="grid gap-3 md:grid-cols-3">
               <div class="md:col-span-1">
