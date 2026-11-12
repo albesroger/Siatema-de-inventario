@@ -3,10 +3,16 @@ import crypto from "crypto";
 import { prisma } from "../src/config/database.js";
 
 const main = async () => {
-  const negocio = await prisma.negocio.findFirst();
+  let negocio = await prisma.negocio.findFirst();
 
   if (!negocio) {
-    throw new Error("No existe ningún negocio. Crea primero un negocio.");
+    negocio = await prisma.negocio.create({
+      data: {
+        nombre: "Mi Negocio",
+      },
+    });
+
+    console.log("Negocio inicial creado: Mi Negocio");
   }
 
   const usuarioExistente = await prisma.usuario.findFirst({
@@ -16,16 +22,28 @@ const main = async () => {
     },
   });
 
-  if (usuarioExistente) {
-    console.log("El usuario admin ya existe; no se modifica su contraseña.");
-    return;
-  }
-
   const password =
     process.env.SEED_ADMIN_PASSWORD ||
     crypto.randomBytes(12).toString("base64url");
 
   const passwordHash = await bcrypt.hash(password, 12);
+
+  if (usuarioExistente) {
+    if (process.env.SEED_ADMIN_PASSWORD) {
+      await prisma.usuario.update({
+        where: { id: usuarioExistente.id },
+        data: { passwordHash },
+      });
+
+      console.log(
+        "El usuario admin ya existe; contraseña actualizada desde SEED_ADMIN_PASSWORD.",
+      );
+    } else {
+      console.log("El usuario admin ya existe; no se modifica su contraseña.");
+    }
+
+    return;
+  }
 
   const usuario = await prisma.usuario.create({
     data: {

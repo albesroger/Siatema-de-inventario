@@ -75,7 +75,7 @@ MODO DESARROLLO (Web)
 
 4. Poblar base de datos:
    cd Backend
-   npx prisma seed
+   npx prisma db seed
 
 5. Iniciar servidor backend:
    cd Backend
